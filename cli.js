@@ -210,9 +210,18 @@ async function cmdGenerate(args) {
   // Step 2: Generate HTML animation via AI
   info('Generating HTML animation via AI...');
 
+  let logoDataUri = '';
+  if (logo && fs.existsSync(logo)) {
+    try {
+      const ext = path.extname(logo).slice(1) || 'png';
+      const b64 = fs.readFileSync(logo).toString('base64');
+      logoDataUri = `data:image/${ext};base64,${b64}`;
+    } catch(e) {}
+  }
+
   let htmlContent;
   try {
-    htmlContent = await generateAnimation(config, { prompt, company, reference, logo });
+    htmlContent = await generateAnimation(config, { prompt, company, reference, logo: logoDataUri });
     success('HTML animation generated');
   } catch (e) {
     err(`AI generation failed: ${e.message}`);
@@ -310,15 +319,12 @@ Strict Requirements:
 5. Brand name: ${company}
 ${logo ? `6. LOCAL LOGO PROVIDED: You MUST include an <img src="${logo}"> tag prominently in the layout.` : ''}
 
-Animation & Styling Excellence (CRITICAL MANDATORY):
-- FATAL ERROR IF STILL IMAGE: The video CANNOT be a still image!
+Animation & Styling Excellence (CRITICAL):
+- DO NOT return a blank screen! You must fulfill the user's background color requests.
 - USE CSS @keyframes and 'animation' properties. Make elements slide in (transform), fade in (opacity), bounce, or scale up sequentially (using animation-delay).
-- MUST INCLUDE A REALISTIC MOUSE CURSOR: You MUST create a synthetic OS-like mouse cursor using EXACTLY this SVG: <svg width="32" height="32" viewBox="0 0 24 36"><path d="M0 0L9.525 35.3361L12.9818 20.3015L24.8198 25.8672L0 0Z" fill="black"/><path d="M1.60335 2.50289L9.59364 32.1873L12.8028 18.2125L22.6186 22.8272L1.60335 2.50289Z" fill="white"/></svg>. Give it a drop shadow and animate it moving across the screen smoothly. Make it click on buttons (adding a ripple effect on the button it clicks).
-- FATAL ERROR IF BROKEN IMAGES OR BASIC DOTS: Do NOT use <img src="..."> tags. Do NOT use simple, basic colored circles. You MUST build elaborate, complex, beautiful UI elements (like rounded glassmorphic cards, intricate grid layouts, or fake code editors) with CSS gradients, shadows, and text.
-- DO NOT use basic grey boxes. Make elements look incredibly premium, like a real Apple commercial.
-- Use Google Fonts (e.g., '@import url' for 'Inter', 'Outfit').
-- Use premium modern UI techniques: subtle gradients, glassmorphism, drop shadows, heavy blur (backdrop-filter), and vibrant colors.
-- Provide highly polished, professional visual aesthetics. It must look like a high-budget tech launch.`;
+- MUST INCLUDE A MOUSE CURSOR: You MUST create a synthetic OS-like mouse cursor using EXACTLY this SVG: <svg width="32" height="32" viewBox="0 0 24 36"><path d="M0 0L9.525 35.3361L12.9818 20.3015L24.8198 25.8672L0 0Z" fill="black"/><path d="M1.60335 2.50289L9.59364 32.1873L12.8028 18.2125L22.6186 22.8272L1.60335 2.50289Z" fill="white"/></svg>. Give it a drop shadow and animate it mathematically across the screen.
+- GRIDS AND ICONS: Do NOT use <img src="..."> tags for anything other than the exact LOCAL LOGO provided. For all other grid items or brand icons, you MUST use CSS to draw sophisticated UI elements with gradients, shadows, text, and glassmorphism.
+- Provide highly polished, professional visual aesthetics matching Apple or Stripe marketing. Never generate a plain white page unless explicitly asked.`;
 
   const userPrompt = `Create an HTML animation for: ${prompt}
 Brand: ${company}
