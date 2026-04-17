@@ -1,0 +1,7 @@
+node_modules/
+rendered/
+render_frames/
+.DS_Store
+*.mp4
+*.mp3
+.framebear.json

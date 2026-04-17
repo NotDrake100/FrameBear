@@ -17,34 +17,59 @@
 
 ---
 
-## What is FrameBear?
+## Quick Start
 
-FrameBear is an AI-powered video generator that turns your prompts into product promo videos. No After Effects. No Premiere Pro. Just describe what you want.
+```bash
+git clone https://github.com/NotDrake100/FrameBear.git
+cd FrameBear
+npm install
+```
+
+### 1. Connect your AI model
+
+```bash
+npx framebear init
+```
+
+Select your model (Gemini 2.0 Flash is free) and enter your API key.
+
+### 2. Generate a video
+
+```bash
+npx framebear generate \
+  --prompt "Dinner expense tracker promo, iMessage style" \
+  --company "MyBrand" \
+  --reference reference.mp4
+```
+
+### 3. Done
 
 ```
-$ framebear generate \
-    --reference uber_ad.mp4 \
-    --company "YourBrand" \
-    --prompt "Dinner expense tracker promo, iMessage style"
-
 ▸ Analyzing reference video...
 ▸ Generating HTML animation...
 ▸ Rendering 150 frames at 30fps...
-✓ Saved → rendered/promo.mp4
+✓ Saved → rendered/mybrand_promo.mp4
 
-Done in 12.3s
+Done in 12.3s — open with: open rendered/mybrand_promo.mp4
 ```
 
-## Features
+## Commands
 
-| Feature | Description |
+| Command | Description |
 |---------|-------------|
-| 🎯 **Prompt to Video** | Describe what you want, get an MP4 |
-| 🧠 **Any AI Model** | Gemini, ChatGPT, Claude, or local |
-| 🔒 **Runs Locally** | Your data never leaves your machine |
-| 🎬 **Reference Videos** | AI analyzes and recreates the style |
-| ⚡ **Frame-Perfect** | Deterministic rendering, no dropped frames |
-| 🎵 **Audio Support** | Background music auto-synced |
+| `framebear init` | Configure your AI model & API key |
+| `framebear generate` | Generate a video from a prompt |
+| `framebear models` | List all supported models |
+| `framebear help` | Show help |
+
+## Generate Options
+
+| Flag | Description |
+|------|-------------|
+| `--prompt` | Describe your video |
+| `--company` | Your brand name |
+| `--reference` | Path to a reference video |
+| `--output` | Custom output path |
 
 ## Supported Models
 
@@ -62,6 +87,12 @@ Done in 12.3s
 | LM Studio | Local | GUI for local models |
 | Mistral | Mistral AI | Large / Medium |
 | Groq | Groq | Ultra-fast inference |
+
+## Requirements
+
+- Node.js 18+
+- Chrome/Chromium (installed automatically by Playwright)
+- FFmpeg (`brew install ffmpeg` on macOS)
 
 ## Live Site
 

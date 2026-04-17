@@ -1,0 +1,20 @@
+{
+  "name": "framebear",
+  "version": "1.0.0",
+  "description": "AI-powered product video generator. Prompt → Video.",
+  "bin": {
+    "framebear": "./cli.js"
+  },
+  "scripts": {
+    "start": "node cli.js"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "playwright": "^1.49.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "NotDrake100",
+  "license": "MIT"
+}
