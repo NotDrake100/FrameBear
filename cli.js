@@ -312,8 +312,7 @@ ${logo ? `6. LOCAL LOGO PROVIDED: You MUST include an <img src="${logo}"> tag pr
 
 Animation & Styling Excellence (CRITICAL MANDATORY):
 - FATAL ERROR IF STILL IMAGE: The video CANNOT be a still image!
-- ALL ANIMATIONS MUST USE JAVASCRIPT \`requestAnimationFrame\` relying exactly on \`performance.now()\`.
-- DO NOT USE CSS \`@keyframes\` or CSS \`transition\`. Our rendering engine uses a virtual time hijacker on \`performance.now()\`, so CSS animations will freeze and fail. You must mathematically calculate styling (transforms, opacity, top/left) inside a Javascript render loop.
+- USE CSS @keyframes and 'animation' properties. Make elements slide in (transform), fade in (opacity), bounce, or scale up sequentially (using animation-delay).
 - DO NOT use basic grey boxes. Make elements look incredibly premium, like a real Apple commercial.
 - Use Google Fonts (e.g., '@import url' for 'Inter', 'Outfit').
 - Use premium modern UI techniques: subtle gradients, glassmorphism, drop shadows, and vibrant colors.
@@ -419,68 +418,61 @@ async function renderVideo(htmlPath, outputPath, audioPath) {
   const { chromium } = require('playwright');
   const { execSync } = require('child_process');
 
-  const absoluteHtml = path.resolve(htmlPath);
-  const framesDir = outputPath.replace('.mp4', '_frames');
-  fs.mkdirSync(framesDir, { recursive: true });
-
-  const browser = await chromium.launch();
-  const page = await browser.newPage({ viewport: { width: 1080, height: 1920 } });
-
-  // Enable virtual time
-  const cdp = await page.context().newCDPSession(page);
-
-  await page.goto(`file://${absoluteHtml}?render=1`);
-
-  // Get animation duration
-  const durationMs = await page.evaluate(() => window.__animationDurationMs || 5000);
-  const fps = 30;
-  const totalFrames = Math.ceil((durationMs / 1000) * fps);
-  const frameDuration = 1000 / fps;
-
-  info(`Rendering ${totalFrames} frames at ${fps}fps...`);
-
-  // Start animation
-  await page.evaluate(() => {
-    if (typeof runSequence === 'function') runSequence();
-  });
-
-  // Capture frames with virtual time
-  for (let i = 0; i < totalFrames; i++) {
-    await cdp.send('Emulation.setVirtualTimePolicy', {
-      policy: 'advance',
-      budget: frameDuration * 1000, // microseconds
-    });
-    await page.waitForTimeout(1);
-
-    const framePath = path.join(framesDir, `f_${String(i).padStart(5, '0')}.png`);
-    await page.screenshot({ path: framePath });
-
-    // Progress
-    if (i % 10 === 0) {
-      process.stdout.write(`\r  ${c.yellow}▸${c.reset} ${c.dim}Frame ${i + 1}/${totalFrames}${c.reset}`);
+  const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+  let durationMs = 5000;
+  const durMatch = htmlContent.match(/window\.__animationDurationMs\s*=\s*(\d+)/);
+  if (durMatch) durationMs = parseInt(durMatch[1], 10);
+  
+  // Decide orientation
+  let w = 1080;
+  let h = 1920;
+  if (htmlContent.includes('1920px') && htmlContent.includes('1080px')) {
+    if (htmlContent.indexOf('1920px') < htmlContent.indexOf('1080px') && htmlContent.includes('width: 1920px')) {
+      w = 1920; h = 1080;
     }
   }
-  process.stdout.write('\n');
 
+  info('Starting Playwright real-time compositor capture...');
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext({
+    viewport: { width: w, height: h },
+    deviceScaleFactor: 1,
+    recordVideo: {
+      dir: path.dirname(outputPath),
+      size: { width: w, height: h }
+    }
+  });
+
+  const page = await context.newPage();
+  
+  // Navigate and immediately start real-time wait
+  const fileUrl = `file://${path.resolve(htmlPath)}?render=1`;
+  await page.goto(fileUrl);
+  
+  info(`Recording for ${durationMs}ms...`);
+  await page.waitForTimeout(durationMs + 200); // 200ms buffer
+  
+  const rawVideoPath = await page.video().path();
+  await context.close();
   await browser.close();
 
-  // Encode with FFmpeg
-  info('Encoding to H.264 MP4...');
+  // Finalize Encoding
+  info('Finalizing video and audio mixing...');
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
 
-  let ffmpegCommand = `ffmpeg -y -framerate ${fps} -i "${framesDir}/f_%05d.png" -c:v libx264 -pix_fmt yuv420p -preset fast "${outputPath}"`;
+  let ffmpegCommand = `ffmpeg -y -i "${rawVideoPath}" -c:v libx264 -pix_fmt yuv420p -preset fast "${outputPath}"`;
   
   if (audioPath && fs.existsSync(audioPath)) {
     info(`Adding audio track: ${path.basename(audioPath)}`);
-    ffmpegCommand = `ffmpeg -y -framerate ${fps} -i "${framesDir}/f_%05d.png" -i "${audioPath}" -c:v libx264 -c:a aac -shortest -pix_fmt yuv420p -preset fast "${outputPath}"`;
+    ffmpegCommand = `ffmpeg -y -i "${rawVideoPath}" -i "${audioPath}" -c:v libx264 -c:a aac -shortest -pix_fmt yuv420p -preset fast "${outputPath}"`;
   }
 
   execSync(ffmpegCommand, {
     stdio: 'pipe',
   });
 
-  // Cleanup frames
-  fs.rmSync(framesDir, { recursive: true, force: true });
+  // Cleanup raw WebM
+  fs.unlinkSync(rawVideoPath);
 }
 
 // ── Utilities ───────────────────────────────────────────
