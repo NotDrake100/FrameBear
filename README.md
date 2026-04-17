@@ -71,6 +71,8 @@ Done in 12.3s — open with: open rendered/mybrand_promo.mp4
 | `--reference` | Path to a reference video |
 | `--output` | Custom output path |
 
+> **Tip:** You can just run `npx framebear generate` with no flags, and it becomes an interactive terminal that asks you for these values. When it asks for the reference video, you can just **drag and drop** the `.mp4` file right into your terminal!
+
 ## Supported Models
 
 | Model | Provider | Notes |
