@@ -313,13 +313,12 @@ ${logo ? `6. LOCAL LOGO PROVIDED: You MUST include an <img src="${logo}"> tag pr
 Animation & Styling Excellence (CRITICAL MANDATORY):
 - FATAL ERROR IF STILL IMAGE: The video CANNOT be a still image!
 - USE CSS @keyframes and 'animation' properties. Make elements slide in (transform), fade in (opacity), bounce, or scale up sequentially (using animation-delay).
-- MUST INCLUDE A MOUSE CURSOR: You MUST create a synthetic OS-like mouse cursor (<div id="cursor"></div>) with an SVG pointer icon. Animate it moving across the screen smoothly, changing to a 'pointer' hand when hovering over buttons, and adding a 'click' ripple effect when it interacts with UI elements. It MUST sync with the video actions.
-- FATAL ERROR IF BROKEN IMAGES: You MUST NOT use <img src="..."> tags for random icons, avatars, or logos unless parsing the specific LOCAL LOGO provided above. For all other graphics, you MUST use inline <svg> code or CSS-styled <div> elements with text. Do NOT hallucinate image URLs.
+- MUST INCLUDE A REALISTIC MOUSE CURSOR: You MUST create a synthetic OS-like mouse cursor using EXACTLY this SVG: <svg width="32" height="32" viewBox="0 0 24 36"><path d="M0 0L9.525 35.3361L12.9818 20.3015L24.8198 25.8672L0 0Z" fill="black"/><path d="M1.60335 2.50289L9.59364 32.1873L12.8028 18.2125L22.6186 22.8272L1.60335 2.50289Z" fill="white"/></svg>. Give it a drop shadow and animate it moving across the screen smoothly. Make it click on buttons (adding a ripple effect on the button it clicks).
+- FATAL ERROR IF BROKEN IMAGES OR BASIC DOTS: Do NOT use <img src="..."> tags. Do NOT use simple, basic colored circles. You MUST build elaborate, complex, beautiful UI elements (like rounded glassmorphic cards, intricate grid layouts, or fake code editors) with CSS gradients, shadows, and text.
 - DO NOT use basic grey boxes. Make elements look incredibly premium, like a real Apple commercial.
 - Use Google Fonts (e.g., '@import url' for 'Inter', 'Outfit').
-- Use premium modern UI techniques: subtle gradients, glassmorphism, drop shadows, and vibrant colors.
-- If showing a terminal, make it resemble a real Mac terminal.
-- Provide highly polished, professional visual aesthetics.`;
+- Use premium modern UI techniques: subtle gradients, glassmorphism, drop shadows, heavy blur (backdrop-filter), and vibrant colors.
+- Provide highly polished, professional visual aesthetics. It must look like a high-budget tech launch.`;
 
   const userPrompt = `Create an HTML animation for: ${prompt}
 Brand: ${company}
