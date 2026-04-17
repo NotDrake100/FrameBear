@@ -303,7 +303,7 @@ async function generateAnimation(config, { prompt, company, reference, logo }) {
 Create a complete, self-contained HTML file that produces a visually stunning product promo animation.
 
 Strict Requirements:
-1. Must define window.__animationDurationMs (total animation length in ms, max 5000).
+1. Must define window.__animationDurationMs. Calculate this duration dynamically based on the user's prompt (e.g., if they ask for a 20-second video, set it to 20000). Default to 5000 if unspecified.
 2. Must define a global runSequence() function that starts the animation automatically.
 3. Include a ?render=1 query param check for headless rendering.
 4. Resolution: 1080x1920 (Vertical) or 1920x1080 (Horizontal).
