@@ -314,6 +314,7 @@ Animation & Styling Excellence (CRITICAL MANDATORY):
 - FATAL ERROR IF STILL IMAGE: The video CANNOT be a still image!
 - USE CSS @keyframes and 'animation' properties. Make elements slide in (transform), fade in (opacity), bounce, or scale up sequentially (using animation-delay).
 - MUST INCLUDE A MOUSE CURSOR: You MUST create a synthetic OS-like mouse cursor (<div id="cursor"></div>) with an SVG pointer icon. Animate it moving across the screen smoothly, changing to a 'pointer' hand when hovering over buttons, and adding a 'click' ripple effect when it interacts with UI elements. It MUST sync with the video actions.
+- FATAL ERROR IF BROKEN IMAGES: You MUST NOT use <img src="..."> tags for random icons, avatars, or logos unless parsing the specific LOCAL LOGO provided above. For all other graphics, you MUST use inline <svg> code or CSS-styled <div> elements with text. Do NOT hallucinate image URLs.
 - DO NOT use basic grey boxes. Make elements look incredibly premium, like a real Apple commercial.
 - Use Google Fonts (e.g., '@import url' for 'Inter', 'Outfit').
 - Use premium modern UI techniques: subtle gradients, glassmorphism, drop shadows, and vibrant colors.
