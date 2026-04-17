@@ -303,7 +303,7 @@ async function generateAnimation(config, { prompt, company, reference, logo }) {
 Create a complete, self-contained HTML file that produces a visually stunning product promo animation.
 
 Strict Requirements:
-1. Must define window.__animationDurationMs (total animation length in ms, max 8000).
+1. Must define window.__animationDurationMs (total animation length in ms, max 5000).
 2. Must define a global runSequence() function that starts the animation automatically.
 3. Include a ?render=1 query param check for headless rendering.
 4. Resolution: 1080x1920 (Vertical) or 1920x1080 (Horizontal).
@@ -311,15 +311,14 @@ Strict Requirements:
 ${logo ? `6. LOCAL LOGO PROVIDED: You MUST include an <img src="${logo}"> tag prominently in the layout.` : ''}
 
 Animation & Styling Excellence (CRITICAL MANDATORY):
-- FATAL ERROR IF STILL IMAGE: The video CANNOT be a still image. Elements MUST animate sequentially!
-- ALWAYS use CSS @keyframes and 'animation' properties with 'animation-fill-mode: forwards'. Do NOT rely heavily on JavaScript requestAnimationFrame because it breaks in headless capture. CSS animations work perfectly.
-- Make elements slide in (transform), fade in (opacity), bounce, or scale up sequentially (using animation-delay).
-- DO NOT use basic grey boxes or default fonts. 
-- Use Google Fonts (e.g., '@import url' for 'Inter', 'Outfit', or 'Plus Jakarta Sans').
-- Use premium modern UI techniques: subtle CSS gradients, glassmorphism (backdrop-filter: blur), drop shadows, and vibrant or deep contrasting modern color schemes.
-- Use smooth CSS transitions (cubic-bezier) and highly precise keyframe layout.
-- If showing a terminal window or code, make it resemble a real Mac terminal (red/yellow/green dots, glassy dark background) with a typing effect.
-- Provide highly polished, professional visual aesthetics comparable to Apple or Vercel marketing.`;
+- FATAL ERROR IF STILL IMAGE: The video CANNOT be a still image!
+- ALL ANIMATIONS MUST USE JAVASCRIPT \`requestAnimationFrame\` relying exactly on \`performance.now()\`.
+- DO NOT USE CSS \`@keyframes\` or CSS \`transition\`. Our rendering engine uses a virtual time hijacker on \`performance.now()\`, so CSS animations will freeze and fail. You must mathematically calculate styling (transforms, opacity, top/left) inside a Javascript render loop.
+- DO NOT use basic grey boxes. Make elements look incredibly premium, like a real Apple commercial.
+- Use Google Fonts (e.g., '@import url' for 'Inter', 'Outfit').
+- Use premium modern UI techniques: subtle gradients, glassmorphism, drop shadows, and vibrant colors.
+- If showing a terminal, make it resemble a real Mac terminal.
+- Provide highly polished, professional visual aesthetics.`;
 
   const userPrompt = `Create an HTML animation for: ${prompt}
 Brand: ${company}
