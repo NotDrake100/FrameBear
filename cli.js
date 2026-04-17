@@ -294,9 +294,7 @@ Generate a COMPLETE HTML file with embedded CSS and JavaScript. No external depe
     const { GoogleGenerativeAI } = require('@google/generative-ai');
     const genAI = new GoogleGenerativeAI(config.apiKey);
     const model = genAI.getGenerativeModel({ model: config.model });
-    const result = await model.generateContent([
-      { role: 'user', parts: [{ text: systemPrompt + '\n\n' + userPrompt }] }
-    ]);
+    const result = await model.generateContent(systemPrompt + '\n\n' + userPrompt);
     const text = result.response.text();
     // Extract HTML from markdown code blocks if present
     const htmlMatch = text.match(/```html\n([\s\S]*?)```/) || text.match(/```\n([\s\S]*?)```/);
