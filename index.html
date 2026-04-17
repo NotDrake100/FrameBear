@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FrameBear — AI Video Generator from Prompts</title>
+  <meta name="description" content="FrameBear — The AI that makes product videos. Give it a prompt, a reference, and your brand. Get a polished MP4. Powered by Gemini, ChatGPT, Claude, or local models.">
+  <meta property="og:title" content="FrameBear — AI Video Generator">
+  <meta property="og:description" content="Product promo videos from a single prompt. No After Effects. No Premiere Pro. Just AI.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐻</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ═══ Navbar ═══ -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-inner">
+      <a href="#" class="nav-brand">
+        <img src="mascot.png" alt="FrameBear" width="32" height="32" style="border-radius:8px;">
+        FrameBear
+      </a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#models">Models</a></li>
+        <li><a href="#quickstart">Quick Start</a></li>
+        <li>
+          <a href="https://github.com/NotDrake100/code-to-video" target="_blank" rel="noopener" class="btn-nav-github">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+            GitHub
+          </a>
+        </li>
+      </ul>
+      <button class="mobile-toggle" id="mobileToggle" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ═══ Hero ═══ -->
+  <section class="hero" id="hero">
+    <div class="hero-bg">
+      <div class="hero-glow glow-1"></div>
+      <div class="hero-glow glow-2"></div>
+      <div class="hero-glow glow-3"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-mascot">
+        <img src="mascot.png" alt="FrameBear mascot" width="120" height="120">
+      </div>
+      <h1 class="hero-title"><span class="gradient-text">FrameBear</span></h1>
+      <p class="hero-tagline">The AI that makes product videos.</p>
+      <p class="hero-desc">
+        Give it a prompt, a reference video, and your brand. Get a polished MP4.
+        Runs locally on your machine. Works with Gemini, ChatGPT, Claude, or any model.
+      </p>
+      <div class="hero-actions">
+        <a href="https://github.com/NotDrake100/code-to-video" target="_blank" rel="noopener" class="btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          Download from GitHub
+        </a>
+        <a href="#quickstart" class="btn-secondary">
+          Quick Start →
+        </a>
+      </div>
+      <a href="https://github.com/NotDrake100/code-to-video" target="_blank" rel="noopener" class="news-pill">
+        <span class="badge">NEW</span>
+        Works with Gemini 2.0 Flash — free API key
+        <span class="arrow">→</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- ═══ Terminal Demo ═══ -->
+  <section class="section" id="demo">
+    <div class="container">
+      <div class="section-header" style="text-align: center;">
+        <div class="section-label reveal" style="justify-content: center;">
+          <span class="chevron">⟩</span> See It in Action
+        </div>
+      </div>
+      <div class="terminal-wrap reveal reveal-d1">
+        <div class="terminal-bar">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <span class="title">framebear — terminal</span>
+        </div>
+        <div class="terminal-body">
+          <div class="terminal-line">
+            <span class="prompt">$</span> <span class="cmd">framebear init</span>
+          </div>
+          <div class="terminal-line">
+            <span class="success">✓</span> <span class="comment">Connected to Gemini 2.0 Flash</span>
+          </div>
+          <div class="terminal-line">&nbsp;</div>
+          <div class="terminal-line">
+            <span class="prompt">$</span> <span class="cmd">framebear generate \</span>
+          </div>
+          <div class="terminal-line">
+            &nbsp;&nbsp;<span class="highlight">--reference</span> <span class="cmd">uber_ad.mp4 \</span>
+          </div>
+          <div class="terminal-line">
+            &nbsp;&nbsp;<span class="highlight">--company</span> <span class="cmd">"CooBear" \</span>
+          </div>
+          <div class="terminal-line">
+            &nbsp;&nbsp;<span class="highlight">--prompt</span> <span class="cmd">"Dinner expense tracker promo, iMessage style"</span>
+          </div>
+          <div class="terminal-line">&nbsp;</div>
+          <div class="terminal-line">
+            <span class="info">⧗</span> <span class="comment">Analyzing reference video...</span>
+          </div>
+          <div class="terminal-line">
+            <span class="info">⧗</span> <span class="comment">Generating HTML animation...</span>
+          </div>
+          <div class="terminal-line">
+            <span class="info">⧗</span> <span class="comment">Rendering 150 frames at 30fps...</span>
+          </div>
+          <div class="terminal-line">
+            <span class="success">✓</span> <span class="cmd">Saved → rendered/coobear_promo.mp4</span>
+          </div>
+          <div class="terminal-line">&nbsp;</div>
+          <div class="terminal-line">
+            <span class="success">Done in 12.3s</span> <span class="comment">— open with: </span><span class="cmd">open rendered/coobear_promo.mp4</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ═══ Features ═══ -->
+  <section class="section" id="features">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-label reveal">
+          <span class="chevron">⟩</span> What It Does
+        </div>
+      </div>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🎯</div>
+          <h3 class="feature-title">Prompt to Video</h3>
+          <p class="feature-text">Describe what you want. Add a reference video. Get a finished MP4 in seconds. The AI handles the creative direction.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🧠</div>
+          <h3 class="feature-title">Any AI Model</h3>
+          <p class="feature-text">Gemini, ChatGPT, Claude, or local models via Ollama. Bring your own API key — or use a free tier.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔒</div>
+          <h3 class="feature-title">Runs Locally</h3>
+          <p class="feature-text">Everything runs on your machine. Your prompts, videos, and brand assets never leave your computer.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🎬</div>
+          <h3 class="feature-title">Reference Videos</h3>
+          <p class="feature-text">Upload any product video as reference. The AI analyzes the style, timing, and transitions — then recreates it for your brand.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3 class="feature-title">Frame-Perfect</h3>
+          <p class="feature-text">Virtual time system captures every frame deterministically. No dropped frames, no timing issues. Same result every time.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🎵</div>
+          <h3 class="feature-title">Audio Support</h3>
+          <p class="feature-text">Drop in background music. Auto-synced and encoded as AAC. Production-ready output in H.264 MP4.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ═══ Models ═══ -->
+  <section class="section" id="models">
+    <div class="container">
+      <div class="section-header" style="text-align: center;">
+        <div class="section-label reveal" style="justify-content: center;">
+          <span class="chevron">⟩</span> Works With Everything
+        </div>
+        <p class="section-desc reveal reveal-d1" style="margin: 12px auto 0; text-align: center;">
+          Connect any AI model. Use a free Gemini key, your existing subscriptions, or run fully local.
+        </p>
+      </div>
+
+      <div class="models-row">
+        <div class="model-card">
+          <div class="model-icon">✨</div>
+          <span class="model-name">Gemini 2.0 Flash</span>
+          <span class="model-sub">Free tier · Recommended</span>
+        </div>
+        <div class="model-card">
+          <div class="model-icon">💎</div>
+          <span class="model-name">Gemini Pro</span>
+          <span class="model-sub">Advanced reasoning</span>
+        </div>
+        <div class="model-card">
+          <div class="model-icon">🤖</div>
+          <span class="model-name">GPT-4o</span>
+          <span class="model-sub">OpenAI</span>
+        </div>
+        <div class="model-card">
+          <div class="model-icon">⚡</div>
+          <span class="model-name">GPT-4o Mini</span>
+          <span class="model-sub">Fast &amp; cheap</span>
+        </div>
+        <div class="model-card">
+          <div class="model-icon">🧠</div>
+          <span class="model-name">Claude Sonnet</span>
+          <span class="model-sub">Anthropic</span>
+        </div>
+        <div class="model-card">
+          <div class="model-icon">🔮</div>
+          <span class="model-name">Claude Opus</span>
+          <span class="model-sub">Most capable</span>
+        </div>
+        <div class="model-card">
+          <div class="model-icon">🦙</div>
+          <span class="model-name">Llama 3</span>
+          <span class="model-sub">Meta · Local</span>
+        </div>
+        <div class="model-card">
+          <div class="model-icon">🌊</div>
+          <span class="model-name">DeepSeek</span>
+          <span class="model-sub">V3 / Coder</span>
+        </div>
+        <div class="model-card">
+          <div class="model-icon">🏠</div>
+          <span class="model-name">Ollama</span>
+          <span class="model-sub">Any local model</span>
+        </div>
+        <div class="model-card">
+          <div class="model-icon">🖥️</div>
+          <span class="model-name">LM Studio</span>
+          <span class="model-sub">Local GUI</span>
+        </div>
+        <div class="model-card">
+          <div class="model-icon">💬</div>
+          <span class="model-name">Mistral</span>
+          <span class="model-sub">Large / Medium</span>
+        </div>
+        <div class="model-card">
+          <div class="model-icon">🔥</div>
+          <span class="model-name">Groq</span>
+          <span class="model-sub">Ultra-fast inference</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ═══ Quick Start ═══ -->
+  <section class="section" id="quickstart">
+    <div class="container">
+      <div class="quickstart-box">
+        <div class="section-label reveal" style="justify-content: center;">
+          <span class="chevron">⟩</span> Quick Start
+        </div>
+        <h2 class="section-title reveal reveal-d1" style="text-align: center;">Up and running in 30 seconds</h2>
+        <p class="section-desc reveal reveal-d2" style="text-align: center; margin: 12px auto 0;">
+          Clone the repo, add your API key, start generating videos.
+        </p>
+
+        <div class="install-cmd reveal reveal-d3">
+          <code>git clone https://github.com/NotDrake100/code-to-video.git && cd code-to-video && npm i</code>
+          <button class="copy-btn">Copy</button>
+        </div>
+        <p class="quickstart-sub reveal reveal-d3">Works on macOS, Linux, and Windows. Requires Node.js 18+ and Chrome.</p>
+
+        <div style="margin-top: 40px; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;" class="reveal reveal-d3">
+          <a href="https://github.com/NotDrake100/code-to-video" target="_blank" rel="noopener" class="btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+            View on GitHub
+          </a>
+          <a href="https://github.com/NotDrake100/code-to-video#readme" target="_blank" rel="noopener" class="btn-secondary">
+            📖 Read the docs
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ Footer ═══ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <a href="#" class="nav-brand" style="font-size: 16px;">
+          <img src="mascot.png" alt="FrameBear" width="28" height="28" style="border-radius:6px;">
+          FrameBear
+        </a>
+        <ul class="footer-links">
+          <li><a href="https://github.com/NotDrake100/code-to-video" target="_blank" rel="noopener">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+            GitHub
+          </a></li>
+          <li><a href="https://coobear.app" target="_blank" rel="noopener">CooBear App</a></li>
+        </ul>
+      </div>
+      <p class="footer-copy">
+        Built by <a href="https://github.com/NotDrake100" target="_blank" rel="noopener">@NotDrake100</a> 🐻 &nbsp;·&nbsp; Open source under MIT License
+      </p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
