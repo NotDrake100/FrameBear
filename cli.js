@@ -81,6 +81,7 @@ async function cmdInit() {
     { id: 'gpt-4o-mini', name: 'GPT-4o Mini', provider: 'openai', note: 'Fast & cheap' },
     { id: 'claude-sonnet', name: 'Claude Sonnet', provider: 'anthropic', note: 'Strong at code' },
     { id: 'claude-opus', name: 'Claude Opus', provider: 'anthropic', note: 'Most capable' },
+    { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 (via Groq)', provider: 'groq', note: 'Ultra-fast & Free' },
     { id: 'ollama', name: 'Ollama (Local)', provider: 'local', note: 'Any local model' },
   ];
 
@@ -91,7 +92,7 @@ async function cmdInit() {
   });
   console.log();
 
-  const choice = await ask('Select model (1-7):');
+  const choice = await ask('Select model (1-8):');
   const idx = parseInt(choice) - 1;
   if (isNaN(idx) || idx < 0 || idx >= models.length) {
     err('Invalid choice. Run framebear init again.');
@@ -109,6 +110,8 @@ async function cmdInit() {
       log(`${c.dim}Get your API key at: ${c.cyan}https://platform.openai.com/api-keys${c.reset}`);
     } else if (selected.provider === 'anthropic') {
       log(`${c.dim}Get your API key at: ${c.cyan}https://console.anthropic.com${c.reset}`);
+    } else if (selected.provider === 'groq') {
+      log(`${c.dim}Get your free API key at: ${c.cyan}https://console.groq.com/keys${c.reset}`);
     }
     console.log();
     apiKey = await ask('Enter your API key:');
@@ -343,6 +346,24 @@ Generate a COMPLETE HTML file with embedded CSS and JavaScript. No external depe
     const data = await response.json();
     if (data.error) throw new Error(data.error.message);
     const text = data.content[0].text;
+    const htmlMatch = text.match(/```html\n([\s\S]*?)```/) || text.match(/```\n([\s\S]*?)```/);
+    return htmlMatch ? htmlMatch[1] : text;
+
+  } else if (config.provider === 'groq') {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.apiKey}` },
+      body: JSON.stringify({
+        model: config.model,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+      }),
+    });
+    const data = await response.json();
+    if (data.error) throw new Error(data.error.message);
+    const text = data.choices[0].message.content;
     const htmlMatch = text.match(/```html\n([\s\S]*?)```/) || text.match(/```\n([\s\S]*?)```/);
     return htmlMatch ? htmlMatch[1] : text;
 
