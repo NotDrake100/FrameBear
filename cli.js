@@ -151,13 +151,14 @@ async function cmdGenerate(args) {
   }
 
   // Parse args
-  let prompt = '', reference = '', company = '', output = '', audio = '';
+  let prompt = '', reference = '', company = '', output = '', audio = '', logo = '';
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--prompt' && args[i + 1]) prompt = args[++i];
     else if (args[i] === '--reference' && args[i + 1]) reference = args[++i];
     else if (args[i] === '--company' && args[i + 1]) company = args[++i];
     else if (args[i] === '--output' && args[i + 1]) output = args[++i];
     else if (args[i] === '--audio' && args[i + 1]) audio = args[++i];
+    else if (args[i] === '--logo' && args[i + 1]) logo = args[++i];
   }
 
   // Interactive mode if no args
@@ -179,6 +180,14 @@ async function cmdGenerate(args) {
       audio = aud.replace(/\\/g, '').trim();
       if (audio.startsWith("'") && audio.endsWith("'")) audio = audio.slice(1, -1);
       if (audio.startsWith('"') && audio.endsWith('"')) audio = audio.slice(1, -1);
+    }
+  }
+  if (!logo) {
+    let lg = await ask('Logo image path (optional, press Enter to skip):');
+    if (lg) {
+      logo = lg.replace(/\\/g, '').trim();
+      if (logo.startsWith("'") && logo.endsWith("'")) logo = logo.slice(1, -1);
+      if (logo.startsWith('"') && logo.endsWith('"')) logo = logo.slice(1, -1);
     }
   }
   if (!output) output = `rendered/${company.toLowerCase().replace(/[^a-z0-9]/g, '_')}_promo.mp4`;
@@ -203,7 +212,7 @@ async function cmdGenerate(args) {
 
   let htmlContent;
   try {
-    htmlContent = await generateAnimation(config, { prompt, company, reference });
+    htmlContent = await generateAnimation(config, { prompt, company, reference, logo });
     success('HTML animation generated');
   } catch (e) {
     err(`AI generation failed: ${e.message}`);
@@ -275,6 +284,7 @@ function cmdHelp() {
   console.log();
   log(`  ${c.yellow}--prompt${c.reset}    ${c.dim}"Describe your video"${c.reset}`);
   log(`  ${c.yellow}--company${c.reset}   ${c.dim}"Your brand name"${c.reset}`);
+  log(`  ${c.yellow}--logo${c.reset}      ${c.dim}path/to/logo.png (embeds logo image)${c.reset}`);
   log(`  ${c.yellow}--reference${c.reset} ${c.dim}path/to/reference.mp4${c.reset}`);
   log(`  ${c.yellow}--audio${c.reset}     ${c.dim}path/to/song.mp3 (adds background music)${c.reset}`);
   log(`  ${c.yellow}--output${c.reset}    ${c.dim}path/to/output.mp4${c.reset}`);
@@ -288,7 +298,7 @@ function cmdHelp() {
 
 // ── AI Generation ───────────────────────────────────────
 
-async function generateAnimation(config, { prompt, company, reference }) {
+async function generateAnimation(config, { prompt, company, reference, logo }) {
   const systemPrompt = `You are FrameBear, an expert HTML/CSS/JS animation generator.
 Create a complete, self-contained HTML file that produces a visually stunning product promo animation.
 
@@ -298,14 +308,18 @@ Strict Requirements:
 3. Include a ?render=1 query param check for headless rendering.
 4. Resolution: 1080x1920 (Vertical) or 1920x1080 (Horizontal).
 5. Brand name: ${company}
+${logo ? `6. LOCAL LOGO PROVIDED: You MUST include an <img src="${logo}"> tag prominently in the layout.` : ''}
 
-Styling Excellence (MANDATORY):
+Animation & Styling Excellence (CRITICAL MANDATORY):
+- FATAL ERROR IF STILL IMAGE: The video CANNOT be a still image. Elements MUST animate sequentially!
+- ALWAYS use CSS @keyframes and 'animation' properties with 'animation-fill-mode: forwards'. Do NOT rely heavily on JavaScript requestAnimationFrame because it breaks in headless capture. CSS animations work perfectly.
+- Make elements slide in (transform), fade in (opacity), bounce, or scale up sequentially (using animation-delay).
 - DO NOT use basic grey boxes or default fonts. 
 - Use Google Fonts (e.g., '@import url' for 'Inter', 'Outfit', or 'Plus Jakarta Sans').
 - Use premium modern UI techniques: subtle CSS gradients, glassmorphism (backdrop-filter: blur), drop shadows, and vibrant or deep contrasting modern color schemes.
 - Use smooth CSS transitions (cubic-bezier) and highly precise keyframe layout.
-- If showing a terminal window or code, make it resemble a real Mac terminal (red/yellow/green dots, glassy dark background).
-- Provide highly polished, professional visual aesthetics comparable to Apple or Stripe marketing.`;
+- If showing a terminal window or code, make it resemble a real Mac terminal (red/yellow/green dots, glassy dark background) with a typing effect.
+- Provide highly polished, professional visual aesthetics comparable to Apple or Vercel marketing.`;
 
   const userPrompt = `Create an HTML animation for: ${prompt}
 Brand: ${company}
