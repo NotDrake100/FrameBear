@@ -160,8 +160,14 @@ async function cmdGenerate(args) {
   if (!prompt) prompt = await ask('Describe your video:');
   if (!company) company = await ask('Company/brand name:');
   if (!reference) {
-    const ref = await ask('Reference video path (optional, press Enter to skip):');
-    if (ref) reference = ref;
+    let ref = await ask('Reference video path (optional, press Enter to skip):');
+    if (ref) {
+      // Remove escape slashes added by macOS terminal drag-and-drop
+      reference = ref.replace(/\\/g, '').trim();
+      // Remove surrounding quotes if added
+      if (reference.startsWith("'") && reference.endsWith("'")) reference = reference.slice(1, -1);
+      if (reference.startsWith('"') && reference.endsWith('"')) reference = reference.slice(1, -1);
+    }
   }
   if (!output) output = `rendered/${company.toLowerCase().replace(/[^a-z0-9]/g, '_')}_promo.mp4`;
 
