@@ -151,12 +151,13 @@ async function cmdGenerate(args) {
   }
 
   // Parse args
-  let prompt = '', reference = '', company = '', output = '';
+  let prompt = '', reference = '', company = '', output = '', audio = '';
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--prompt' && args[i + 1]) prompt = args[++i];
     else if (args[i] === '--reference' && args[i + 1]) reference = args[++i];
     else if (args[i] === '--company' && args[i + 1]) company = args[++i];
     else if (args[i] === '--output' && args[i + 1]) output = args[++i];
+    else if (args[i] === '--audio' && args[i + 1]) audio = args[++i];
   }
 
   // Interactive mode if no args
@@ -170,6 +171,14 @@ async function cmdGenerate(args) {
       // Remove surrounding quotes if added
       if (reference.startsWith("'") && reference.endsWith("'")) reference = reference.slice(1, -1);
       if (reference.startsWith('"') && reference.endsWith('"')) reference = reference.slice(1, -1);
+    }
+  }
+  if (!audio) {
+    let aud = await ask('Audio song path (optional, press Enter to skip):');
+    if (aud) {
+      audio = aud.replace(/\\/g, '').trim();
+      if (audio.startsWith("'") && audio.endsWith("'")) audio = audio.slice(1, -1);
+      if (audio.startsWith('"') && audio.endsWith('"')) audio = audio.slice(1, -1);
     }
   }
   if (!output) output = `rendered/${company.toLowerCase().replace(/[^a-z0-9]/g, '_')}_promo.mp4`;
@@ -211,7 +220,7 @@ async function cmdGenerate(args) {
   info('Rendering frames with Playwright...');
 
   try {
-    await renderVideo(htmlPath, output);
+    await renderVideo(htmlPath, output, audio);
     success(`Video saved → ${c.bold}${output}${c.reset}`);
   } catch (e) {
     err(`Rendering failed: ${e.message}`);
@@ -267,6 +276,7 @@ function cmdHelp() {
   log(`  ${c.yellow}--prompt${c.reset}    ${c.dim}"Describe your video"${c.reset}`);
   log(`  ${c.yellow}--company${c.reset}   ${c.dim}"Your brand name"${c.reset}`);
   log(`  ${c.yellow}--reference${c.reset} ${c.dim}path/to/reference.mp4${c.reset}`);
+  log(`  ${c.yellow}--audio${c.reset}     ${c.dim}path/to/song.mp3 (adds background music)${c.reset}`);
   log(`  ${c.yellow}--output${c.reset}    ${c.dim}path/to/output.mp4${c.reset}`);
   console.log();
   log(`${c.bold}Examples${c.reset}`);
@@ -280,18 +290,22 @@ function cmdHelp() {
 
 async function generateAnimation(config, { prompt, company, reference }) {
   const systemPrompt = `You are FrameBear, an expert HTML/CSS/JS animation generator.
-Create a complete, self-contained HTML file that produces a product promo animation.
+Create a complete, self-contained HTML file that produces a visually stunning product promo animation.
 
-Requirements:
-- Must define window.__animationDurationMs (total animation length in ms)
-- Must define a global runSequence() function that starts the animation
-- Use CSS animations and JavaScript for timing
-- Include a ?render=1 query param check for headless rendering
-- Resolution: 1080x1920 (vertical) or 1920x1080 (horizontal)
-- Brand name: ${company}
-- Make it visually stunning with smooth transitions
+Strict Requirements:
+1. Must define window.__animationDurationMs (total animation length in ms, max 8000).
+2. Must define a global runSequence() function that starts the animation automatically.
+3. Include a ?render=1 query param check for headless rendering.
+4. Resolution: 1080x1920 (Vertical) or 1920x1080 (Horizontal).
+5. Brand name: ${company}
 
-The animation should tell a story about the product in 5-8 seconds.`;
+Styling Excellence (MANDATORY):
+- DO NOT use basic grey boxes or default fonts. 
+- Use Google Fonts (e.g., '@import url' for 'Inter', 'Outfit', or 'Plus Jakarta Sans').
+- Use premium modern UI techniques: subtle CSS gradients, glassmorphism (backdrop-filter: blur), drop shadows, and vibrant or deep contrasting modern color schemes.
+- Use smooth CSS transitions (cubic-bezier) and highly precise keyframe layout.
+- If showing a terminal window or code, make it resemble a real Mac terminal (red/yellow/green dots, glassy dark background).
+- Provide highly polished, professional visual aesthetics comparable to Apple or Stripe marketing.`;
 
   const userPrompt = `Create an HTML animation for: ${prompt}
 Brand: ${company}
@@ -388,7 +402,7 @@ Generate a COMPLETE HTML file with embedded CSS and JavaScript. No external depe
 
 // ── Renderer ────────────────────────────────────────────
 
-async function renderVideo(htmlPath, outputPath) {
+async function renderVideo(htmlPath, outputPath, audioPath) {
   const { chromium } = require('playwright');
   const { execSync } = require('child_process');
 
@@ -441,7 +455,14 @@ async function renderVideo(htmlPath, outputPath) {
   info('Encoding to H.264 MP4...');
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
 
-  execSync(`ffmpeg -y -framerate ${fps} -i "${framesDir}/f_%05d.png" -c:v libx264 -pix_fmt yuv420p -preset fast "${outputPath}"`, {
+  let ffmpegCommand = `ffmpeg -y -framerate ${fps} -i "${framesDir}/f_%05d.png" -c:v libx264 -pix_fmt yuv420p -preset fast "${outputPath}"`;
+  
+  if (audioPath && fs.existsSync(audioPath)) {
+    info(`Adding audio track: ${path.basename(audioPath)}`);
+    ffmpegCommand = `ffmpeg -y -framerate ${fps} -i "${framesDir}/f_%05d.png" -i "${audioPath}" -c:v libx264 -c:a aac -shortest -pix_fmt yuv420p -preset fast "${outputPath}"`;
+  }
+
+  execSync(ffmpegCommand, {
     stdio: 'pipe',
   });
 
