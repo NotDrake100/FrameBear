@@ -305,7 +305,7 @@ function cmdHelp() {
 
 // ── AI Generation ───────────────────────────────────────
 
-function buildSystemPrompt(company, logo) {
+function buildSystemPrompt(company, hasLogo) {
   return `You are FrameBear, an expert HTML/CSS/JS animation generator for product promo videos.
 
 OUTPUT RULES:
@@ -344,7 +344,7 @@ VISUAL DESIGN (CRITICAL):
 - NEVER use <img src="..."> for icons. Draw icons with inline SVG or CSS shapes.
 - NEVER use plain colored circles as placeholders. Build real UI mockups.
 - NEVER output a white or blank page.
-${logo ? `- LOGO: Include this logo using <img src="${logo}" style="width:80px;height:80px;border-radius:18px;">` : ''}
+${hasLogo ? '- LOGO: The user provided a logo. Include it using <img src="__LOGO_SRC__" style="width:80px;height:80px;border-radius:18px;object-fit:contain;"> wherever the brand logo should appear.' : ''}
 
 EXAMPLE SCENE SCRIPT PATTERN:
 <script>
@@ -368,7 +368,7 @@ EXAMPLE SCENE SCRIPT PATTERN:
 }
 
 async function generateAnimation(config, { prompt, company, reference, logo }) {
-  const systemPrompt = buildSystemPrompt(company, logo);
+  const systemPrompt = buildSystemPrompt(company, !!logo);
 
   const userPrompt = `Create an HTML animation for: ${prompt}
 Brand: ${company}
@@ -456,18 +456,30 @@ Generate a COMPLETE HTML file. No markdown code fences. Just pure HTML.`;
 
   // Extract HTML: try code fences first, then raw
   const htmlMatch = text.match(/```html\n([\s\S]*?)```/) || text.match(/```\n([\s\S]*?)```/);
-  if (htmlMatch) return htmlMatch[1];
+  let html = '';
+  if (htmlMatch) {
+    html = htmlMatch[1];
+  } else {
+    const trimmed = text.trim();
+    if (trimmed.startsWith('<!') || trimmed.startsWith('<html')) {
+      html = trimmed;
+    } else {
+      const firstTag = trimmed.indexOf('<');
+      const lastTag = trimmed.lastIndexOf('>');
+      if (firstTag !== -1 && lastTag !== -1) {
+        html = trimmed.substring(firstTag, lastTag + 1);
+      } else {
+        html = trimmed;
+      }
+    }
+  }
 
-  // If it starts with <!DOCTYPE or <html, it's raw HTML
-  const trimmed = text.trim();
-  if (trimmed.startsWith('<!') || trimmed.startsWith('<html')) return trimmed;
+  // Inject logo base64 data URI into the placeholder
+  if (logo) {
+    html = html.replace(/__LOGO_SRC__/g, logo);
+  }
 
-  // Last resort: find the first < to last >
-  const firstTag = trimmed.indexOf('<');
-  const lastTag = trimmed.lastIndexOf('>');
-  if (firstTag !== -1 && lastTag !== -1) return trimmed.substring(firstTag, lastTag + 1);
-
-  return trimmed;
+  return html;
 }
 
 // ── Renderer ────────────────────────────────────────────
