@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{BRAND}} — Promo</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%; overflow: hidden;
+      background: #0c0d10; font-family: 'Inter', sans-serif; color: #fff;
+    }
+    body { display: grid; place-items: center; }
+
+    .stage {
+      position: relative; width: 1080px; height: 1920px; overflow: hidden;
+      background: #0c0d10;
+    }
+
+    .bg-glow {
+      position: absolute; width: 800px; height: 800px;
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
+      background: radial-gradient(circle, {{ACCENT_COLOR}}18 0%, transparent 70%);
+      border-radius: 50%; filter: blur(100px);
+      animation: glowPulse 5s ease-in-out infinite alternate;
+    }
+    @keyframes glowPulse {
+      0% { opacity: 0.3; } 100% { opacity: 0.6; }
+    }
+
+    .scene {
+      position: absolute; inset: 0; display: none;
+      justify-content: center; align-items: center; flex-direction: column;
+      opacity: 0; z-index: 2;
+    }
+    .scene.active { display: flex; opacity: 1; }
+
+    /* ── Scene 1: Word 1 ── */
+    .word-big {
+      font-size: 120px; font-weight: 900; letter-spacing: -0.06em;
+      line-height: 1; opacity: 0;
+    }
+    .word-big.from-left { transform: translateX(-200px); }
+    .word-big.from-right { transform: translateX(200px); }
+
+    .scene.active .word-big.from-left {
+      animation: slideFromLeft 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+    }
+    .scene.active .word-big.from-right {
+      animation: slideFromRight 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+    }
+
+    @keyframes slideFromLeft {
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes slideFromRight {
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .word-accent {
+      color: {{ACCENT_COLOR}};
+    }
+
+    /* ── Scene 2: Word 2 ── */
+
+    /* ── Scene 3: Combined ── */
+    .combined-wrap { text-align: center; }
+
+    .combined-line {
+      font-size: 80px; font-weight: 900; letter-spacing: -0.05em;
+      line-height: 1.2; opacity: 0; transform: scale(0.9);
+    }
+    .combined-line:nth-child(1) { color: #fff; }
+    .combined-line:nth-child(2) { color: {{ACCENT_COLOR}}; }
+
+    .scene.active .combined-line:nth-child(1) {
+      animation: combineIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+    }
+    .scene.active .combined-line:nth-child(2) {
+      animation: combineIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+    }
+    @keyframes combineIn {
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .combined-sub {
+      font-size: 28px; font-weight: 400; color: rgba(255,255,255,0.4);
+      letter-spacing: -0.02em; margin-top: 40px;
+      opacity: 0; transform: translateY(16px);
+    }
+    .scene.active .combined-sub {
+      animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.7s forwards;
+    }
+
+    /* ── Scene 4: Logo + CTA ── */
+    .cta-wrap { text-align: center; }
+
+    .cta-logo {
+      width: 120px; height: 120px; border-radius: 28px;
+      margin: 0 auto 48px; opacity: 0; transform: scale(0.7) rotate(-8deg);
+      box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+      object-fit: contain;
+    }
+    .scene.active .cta-logo {
+      animation: logoSpin 1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+    }
+    @keyframes logoSpin {
+      to { opacity: 1; transform: scale(1) rotate(0deg); }
+    }
+
+    .cta-brand {
+      font-size: 64px; font-weight: 800; letter-spacing: -0.05em;
+      opacity: 0; transform: translateY(20px);
+    }
+    .scene.active .cta-brand {
+      animation: slideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards;
+    }
+
+    .cta-tagline {
+      font-size: 24px; color: rgba(255,255,255,0.35);
+      letter-spacing: 0.12em; text-transform: uppercase;
+      margin-top: 16px; opacity: 0;
+    }
+    .scene.active .cta-tagline {
+      animation: fadeIn 0.8s ease 0.9s forwards;
+    }
+
+    .cta-btn {
+      display: inline-block; margin-top: 56px;
+      padding: 20px 56px; border-radius: 16px;
+      background: {{ACCENT_COLOR}}; color: #fff;
+      font-size: 24px; font-weight: 700; letter-spacing: -0.02em;
+      box-shadow: 0 12px 40px {{ACCENT_COLOR}}55;
+      opacity: 0; transform: translateY(20px);
+    }
+    .scene.active .cta-btn {
+      animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 1.1s forwards;
+    }
+
+    /* ── Accents ── */
+    .line-accent {
+      position: absolute; height: 3px; background: {{ACCENT_COLOR}};
+      border-radius: 999px; opacity: 0;
+    }
+    .line-accent.l1 {
+      width: 200px; bottom: 400px; left: -200px;
+    }
+    .line-accent.l2 {
+      width: 140px; top: 500px; right: -140px;
+    }
+    .scene.active .line-accent.l1 {
+      animation: lineSwipe 0.8s ease 0.4s forwards;
+    }
+    .scene.active .line-accent.l2 {
+      animation: lineSwipeR 0.8s ease 0.6s forwards;
+    }
+    @keyframes lineSwipe {
+      to { opacity: 0.6; left: 1080px; }
+    }
+    @keyframes lineSwipeR {
+      to { opacity: 0.6; right: 1080px; }
+    }
+
+    @keyframes slideUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <main class="stage">
+    <div class="bg-glow"></div>
+
+    <!-- Scene 1: First Word -->
+    <section class="scene" id="scene-word1">
+      <div class="word-big from-left">{{WORD_1}}</div>
+      <div class="line-accent l1"></div>
+    </section>
+
+    <!-- Scene 2: Second Word -->
+    <section class="scene" id="scene-word2">
+      <div class="word-big from-right word-accent">{{WORD_2}}</div>
+      <div class="line-accent l2"></div>
+    </section>
+
+    <!-- Scene 3: Combined -->
+    <section class="scene" id="scene-combined">
+      <div class="combined-wrap">
+        <div class="combined-line">{{WORD_1}}</div>
+        <div class="combined-line">{{WORD_2}}</div>
+        <div class="combined-sub">{{SUBLINE}}</div>
+      </div>
+    </section>
+
+    <!-- Scene 4: Logo + CTA -->
+    <section class="scene" id="scene-cta">
+      <div class="cta-wrap">
+        <img class="cta-logo" src="__LOGO_SRC__" alt="Logo">
+        <div class="cta-brand">{{BRAND}}</div>
+        <div class="cta-tagline">{{BRAND_TAGLINE}}</div>
+        <div class="cta-btn">{{CTA_TEXT}}</div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const scenes = [
+      { id: "scene-word1",    duration: 2500 },
+      { id: "scene-word2",    duration: 2500 },
+      { id: "scene-combined", duration: 4000 },
+      { id: "scene-cta",      duration: 4000 }
+    ];
+
+    window.__animationDurationMs = scenes.reduce((s, sc) => s + sc.duration, 0);
+    let idx = 0;
+    let sceneTimeout;
+
+    function showScene(i) {
+      clearTimeout(sceneTimeout);
+      document.querySelectorAll(".scene").forEach(s => s.classList.remove("active"));
+      const el = document.getElementById(scenes[i].id);
+      el.classList.add("active");
+
+      // Reset all animations inside this scene
+      el.querySelectorAll("*").forEach(n => {
+        const cs = getComputedStyle(n);
+        if (cs.animationName && cs.animationName !== 'none') {
+          n.style.animation = "none";
+          void n.offsetWidth;
+          n.style.animation = "";
+        }
+      });
+
+      sceneTimeout = setTimeout(() => {
+        idx = (idx + 1) % scenes.length;
+        if (idx === 0) return; // Don't loop
+        showScene(idx);
+      }, scenes[i].duration);
+    }
+
+    showScene(0);
+  </script>
+</body>
+</html>

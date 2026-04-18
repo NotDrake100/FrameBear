@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{BRAND}} — Product Launch</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%; overflow: hidden;
+      background: #0c0d10; font-family: 'Inter', sans-serif; color: #fff;
+    }
+    body { display: grid; place-items: center; }
+
+    .stage {
+      position: relative; width: 1080px; height: 1920px; overflow: hidden;
+      background: #0c0d10;
+    }
+
+    /* ── Animated background glow ── */
+    .bg-glow {
+      position: absolute; width: 600px; height: 600px;
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
+      background: radial-gradient(circle, {{ACCENT_COLOR}}22 0%, transparent 70%);
+      border-radius: 50%; filter: blur(80px);
+      animation: glowPulse 4s ease-in-out infinite alternate;
+    }
+    @keyframes glowPulse {
+      0% { opacity: 0.4; transform: translate(-50%, -50%) scale(1); }
+      100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.2); }
+    }
+
+    /* ── Scenes ── */
+    .scene {
+      position: absolute; inset: 0; display: none;
+      justify-content: center; align-items: center; flex-direction: column;
+      opacity: 0; z-index: 2;
+    }
+    .scene.active { display: flex; opacity: 1; }
+
+    /* ── macOS Cursor ── */
+    #cursor {
+      position: fixed; z-index: 9999; pointer-events: none;
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+      opacity: 0;
+    }
+    #cursor svg { width: 28px; height: 34px; }
+
+    @keyframes cursorScene1 {
+      0%   { top: 300px; left: 200px; opacity: 0; }
+      10%  { top: 300px; left: 200px; opacity: 1; }
+      50%  { top: 520px; left: 440px; opacity: 1; }
+      55%  { top: 518px; left: 438px; }
+      60%  { top: 520px; left: 440px; }
+      100% { top: 520px; left: 440px; opacity: 1; }
+    }
+    @keyframes cursorScene2 {
+      0%   { top: 520px; left: 440px; opacity: 1; }
+      30%  { top: 700px; left: 300px; opacity: 1; }
+      35%  { top: 698px; left: 298px; }
+      40%  { top: 700px; left: 300px; }
+      70%  { top: 850px; left: 500px; opacity: 1; }
+      75%  { top: 848px; left: 498px; }
+      80%  { top: 850px; left: 500px; }
+      100% { top: 850px; left: 500px; opacity: 0; }
+    }
+
+    /* ── Click ripple ── */
+    .ripple {
+      position: absolute; width: 40px; height: 40px;
+      border: 2px solid {{ACCENT_COLOR}}; border-radius: 50%;
+      opacity: 0; z-index: 9998; pointer-events: none;
+    }
+    @keyframes rippleOut {
+      0% { transform: scale(0); opacity: 0.8; }
+      100% { transform: scale(3); opacity: 0; }
+    }
+
+    /* ══════════════════════════════════════════
+       SCENE 1 — Terminal
+       ══════════════════════════════════════════ */
+    .terminal {
+      width: 820px; border-radius: 16px; overflow: hidden;
+      background: rgba(20, 21, 27, 0.85);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 32px 64px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05) inset;
+      opacity: 0; transform: translateY(-40px);
+    }
+    .scene.active .terminal {
+      animation: termDrop 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+    }
+    @keyframes termDrop {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .term-bar {
+      height: 48px; background: rgba(30,31,38,0.9);
+      display: flex; align-items: center; padding: 0 18px; gap: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .term-dot {
+      width: 14px; height: 14px; border-radius: 50%;
+    }
+    .term-dot.r { background: #ff5f57; }
+    .term-dot.y { background: #febc2e; }
+    .term-dot.g { background: #28c840; }
+
+    .term-body { padding: 28px 24px; min-height: 200px; }
+
+    .term-prompt {
+      color: {{ACCENT_COLOR}}; font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 22px; letter-spacing: -0.02em;
+    }
+    .term-prompt::before { content: "❯ "; color: #666; }
+
+    .term-cmd {
+      display: inline; color: #e0e0e0;
+      font-family: 'SF Mono', 'Fira Code', monospace; font-size: 22px;
+    }
+
+    .term-output {
+      margin-top: 16px; font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 18px; color: #888; line-height: 1.6;
+      opacity: 0;
+    }
+    .scene.active .term-output {
+      animation: fadeIn 0.4s ease 2.8s forwards;
+    }
+
+    .term-output .check { color: #28c840; }
+    .term-output .spin { color: {{ACCENT_COLOR}}; }
+
+    /* ══════════════════════════════════════════
+       SCENE 2 — Model Grid
+       ══════════════════════════════════════════ */
+    .grid-title {
+      font-size: 38px; font-weight: 700; letter-spacing: -0.04em;
+      margin-bottom: 48px; opacity: 0; transform: translateY(20px);
+      color: rgba(255,255,255,0.6);
+    }
+    .scene.active .grid-title {
+      animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+    }
+
+    .model-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 18px; width: 860px;
+    }
+
+    .model-card {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px; padding: 24px 20px;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 12px; opacity: 0; transform: translateY(30px);
+      transition: background 0.3s;
+    }
+    .model-card:hover { background: rgba(255,255,255,0.08); }
+
+    .scene.active .model-card {
+      animation: cardIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .scene.active .model-card:nth-child(1)  { animation-delay: 0.1s; }
+    .scene.active .model-card:nth-child(2)  { animation-delay: 0.15s; }
+    .scene.active .model-card:nth-child(3)  { animation-delay: 0.2s; }
+    .scene.active .model-card:nth-child(4)  { animation-delay: 0.25s; }
+    .scene.active .model-card:nth-child(5)  { animation-delay: 0.3s; }
+    .scene.active .model-card:nth-child(6)  { animation-delay: 0.35s; }
+    .scene.active .model-card:nth-child(7)  { animation-delay: 0.4s; }
+    .scene.active .model-card:nth-child(8)  { animation-delay: 0.45s; }
+    .scene.active .model-card:nth-child(9)  { animation-delay: 0.5s; }
+    .scene.active .model-card:nth-child(10) { animation-delay: 0.55s; }
+    .scene.active .model-card:nth-child(11) { animation-delay: 0.6s; }
+    .scene.active .model-card:nth-child(12) { animation-delay: 0.65s; }
+
+    @keyframes cardIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      display: grid; place-items: center;
+      font-size: 24px; font-weight: 800; color: #fff;
+    }
+    .card-name {
+      font-size: 16px; font-weight: 600; color: rgba(255,255,255,0.7);
+      letter-spacing: -0.02em; text-align: center;
+    }
+
+    /* Card color accents */
+    .card-gemini   .card-icon { background: linear-gradient(135deg, #4285f4, #ea4335); }
+    .card-gpt      .card-icon { background: linear-gradient(135deg, #10a37f, #1a7f64); }
+    .card-claude   .card-icon { background: linear-gradient(135deg, #d4a574, #c4956a); }
+    .card-llama    .card-icon { background: linear-gradient(135deg, #0467df, #0350a8); }
+    .card-mistral  .card-icon { background: linear-gradient(135deg, #ff7000, #ee5a00); }
+    .card-deepseek .card-icon { background: linear-gradient(135deg, #4f46e5, #3730a3); }
+    .card-groq     .card-icon { background: linear-gradient(135deg, #f55036, #d63a22); }
+    .card-cohere   .card-icon { background: linear-gradient(135deg, #39594d, #2d4a3e); }
+    .card-phi      .card-icon { background: linear-gradient(135deg, #0078d4, #005a9e); }
+    .card-qwen     .card-icon { background: linear-gradient(135deg, #6d28d9, #5b21b6); }
+    .card-ollama   .card-icon { background: linear-gradient(135deg, #333, #555); }
+    .card-lmstudio .card-icon { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+
+    /* ══════════════════════════════════════════
+       SCENE 3 — Headline + Logo
+       ══════════════════════════════════════════ */
+    .finale { text-align: center; }
+
+    .finale-logo {
+      width: 100px; height: 100px; border-radius: 24px;
+      margin: 0 auto 40px; opacity: 0; transform: scale(0.8);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+      object-fit: contain;
+    }
+    .scene.active .finale-logo {
+      animation: logoIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+    }
+    @keyframes logoIn {
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .finale-headline {
+      font-size: 56px; font-weight: 800; letter-spacing: -0.05em;
+      line-height: 1.15; max-width: 700px; margin: 0 auto;
+      opacity: 0; transform: translateY(24px);
+    }
+    .scene.active .finale-headline {
+      animation: slideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards;
+    }
+
+    .finale-subline {
+      font-size: 28px; font-weight: 400; color: rgba(255,255,255,0.5);
+      letter-spacing: -0.03em; margin-top: 24px;
+      opacity: 0; transform: translateY(16px);
+    }
+    .scene.active .finale-subline {
+      animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 1s forwards;
+    }
+
+    .finale-cta {
+      display: inline-block; margin-top: 48px;
+      padding: 18px 48px; border-radius: 14px;
+      background: {{ACCENT_COLOR}}; color: #fff;
+      font-size: 22px; font-weight: 700; letter-spacing: -0.02em;
+      box-shadow: 0 8px 32px {{ACCENT_COLOR}}44;
+      opacity: 0; transform: translateY(16px);
+    }
+    .scene.active .finale-cta {
+      animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 1.3s forwards;
+    }
+
+    /* ══════════════════════════════════════════
+       SCENE 4 — Brand Close
+       ══════════════════════════════════════════ */
+    .brand-close {
+      text-align: center; opacity: 0; transform: scale(0.95);
+    }
+    .scene.active .brand-close {
+      animation: brandIn 1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+    }
+    @keyframes brandIn {
+      to { opacity: 1; transform: scale(1); }
+    }
+    .brand-name {
+      font-size: 72px; font-weight: 800; letter-spacing: -0.06em;
+      background: linear-gradient(135deg, #fff 0%, {{ACCENT_COLOR}} 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .brand-tagline {
+      font-size: 24px; color: rgba(255,255,255,0.4);
+      letter-spacing: 0.15em; text-transform: uppercase; margin-top: 16px;
+    }
+
+    /* ── Shared keyframes ── */
+    @keyframes slideUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <main class="stage">
+    <div class="bg-glow"></div>
+
+    <!-- Cursor -->
+    <div id="cursor">
+      <svg width="24" height="28" viewBox="0 0 24 36">
+        <path d="M0 0L9.5 35.3L13 20.3L24.8 25.9L0 0Z" fill="#000"/>
+        <path d="M1.6 2.5L9.6 32.2L12.8 18.2L22.6 22.8L1.6 2.5Z" fill="#fff"/>
+      </svg>
+    </div>
+
+    <!-- Scene 1: Terminal -->
+    <section class="scene" id="scene-terminal">
+      <div class="terminal">
+        <div class="term-bar">
+          <span class="term-dot r"></span>
+          <span class="term-dot y"></span>
+          <span class="term-dot g"></span>
+        </div>
+        <div class="term-body">
+          <div class="term-prompt">
+            <span class="term-cmd" id="typedCmd"></span>
+          </div>
+          <div class="term-output">
+            <span class="check">✓</span> Connected to AI model<br>
+            <span class="spin">▸</span> Generating animation...<br>
+            <span class="check">✓</span> Rendering frames...<br>
+            <span class="check">✓</span> Video saved → output.mp4
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Scene 2: Model Grid -->
+    <section class="scene" id="scene-grid">
+      <div class="grid-title">{{GRID_TITLE}}</div>
+      <div class="model-grid">
+        <div class="model-card card-gemini"><div class="card-icon">G</div><div class="card-name">Gemini</div></div>
+        <div class="model-card card-gpt"><div class="card-icon">⬡</div><div class="card-name">GPT-4o</div></div>
+        <div class="model-card card-claude"><div class="card-icon">C</div><div class="card-name">Claude</div></div>
+        <div class="model-card card-llama"><div class="card-icon">🦙</div><div class="card-name">Llama 3</div></div>
+        <div class="model-card card-mistral"><div class="card-icon">M</div><div class="card-name">Mistral</div></div>
+        <div class="model-card card-deepseek"><div class="card-icon">D</div><div class="card-name">DeepSeek</div></div>
+        <div class="model-card card-groq"><div class="card-icon">⚡</div><div class="card-name">Groq</div></div>
+        <div class="model-card card-cohere"><div class="card-icon">Co</div><div class="card-name">Cohere</div></div>
+        <div class="model-card card-phi"><div class="card-icon">Φ</div><div class="card-name">Phi-3</div></div>
+        <div class="model-card card-qwen"><div class="card-icon">Q</div><div class="card-name">Qwen</div></div>
+        <div class="model-card card-ollama"><div class="card-icon">🖥</div><div class="card-name">Ollama</div></div>
+        <div class="model-card card-lmstudio"><div class="card-icon">◎</div><div class="card-name">LM Studio</div></div>
+      </div>
+    </section>
+
+    <!-- Scene 3: Headline -->
+    <section class="scene" id="scene-headline">
+      <div class="finale">
+        <img class="finale-logo" src="__LOGO_SRC__" alt="Logo">
+        <h1 class="finale-headline">{{HEADLINE}}</h1>
+        <p class="finale-subline">{{SUBLINE}}</p>
+        <div class="finale-cta">{{CTA_TEXT}}</div>
+      </div>
+    </section>
+
+    <!-- Scene 4: Brand Close -->
+    <section class="scene" id="scene-brand">
+      <div class="brand-close">
+        <div class="brand-name">{{BRAND}}</div>
+        <div class="brand-tagline">{{BRAND_TAGLINE}}</div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const scenes = [
+      { id: "scene-terminal",  duration: 5000 },
+      { id: "scene-grid",      duration: 6000 },
+      { id: "scene-headline",  duration: 6000 },
+      { id: "scene-brand",     duration: 3000 }
+    ];
+
+    window.__animationDurationMs = scenes.reduce((s, sc) => s + sc.duration, 0);
+
+    const cursor = document.getElementById("cursor");
+    let sceneTimeout;
+    let idx = 0;
+
+    // ── Typing effect ──
+    function typeCommand(text, el, speed, cb) {
+      let i = 0;
+      function next() {
+        if (i < text.length) {
+          el.textContent += text[i++];
+          setTimeout(next, speed);
+        } else if (cb) cb();
+      }
+      next();
+    }
+
+    // ── Scene management ──
+    function showScene(i) {
+      clearTimeout(sceneTimeout);
+      document.querySelectorAll(".scene").forEach(s => s.classList.remove("active"));
+      const el = document.getElementById(scenes[i].id);
+      el.classList.add("active");
+
+      // Reset animations
+      el.querySelectorAll(".terminal, .grid-title, .model-card, .finale-logo, .finale-headline, .finale-subline, .finale-cta, .brand-close, .term-output").forEach(n => {
+        n.style.animation = "none";
+        void n.offsetWidth;
+        n.style.animation = "";
+      });
+
+      // Cursor animation per scene
+      if (i === 0) {
+        cursor.style.animation = "cursorScene1 5s ease-in-out forwards";
+        const cmdEl = document.getElementById("typedCmd");
+        cmdEl.textContent = "";
+        setTimeout(() => typeCommand("{{COMMAND}}", cmdEl, 60), 1200);
+      } else if (i === 1) {
+        cursor.style.animation = "cursorScene2 6s ease-in-out forwards";
+      } else {
+        cursor.style.animation = "none";
+        cursor.style.opacity = "0";
+      }
+
+      sceneTimeout = setTimeout(() => {
+        idx = (idx + 1) % scenes.length;
+        if (idx === 0) return; // Don't loop
+        showScene(idx);
+      }, scenes[i].duration);
+    }
+
+    showScene(0);
+  </script>
+</body>
+</html>
