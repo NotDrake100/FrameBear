@@ -384,7 +384,7 @@ Generate a COMPLETE HTML file. No markdown code fences. Just pure HTML.`;
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        max_tokens: 16000,
+        max_tokens: 8000,
       }),
     });
     const data = await response.json();
