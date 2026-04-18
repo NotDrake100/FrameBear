@@ -43,40 +43,26 @@
 
     /* ── macOS Cursor ── */
     #cursor {
-      position: fixed; z-index: 9999; pointer-events: none;
-      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
-      opacity: 0;
+      position: absolute; z-index: 9999; pointer-events: none;
+      filter: drop-shadow(0 3px 8px rgba(0,0,0,0.6));
+      opacity: 0; top: 0; left: 0;
+      transition: none;
     }
-    #cursor svg { width: 28px; height: 34px; }
-
-    @keyframes cursorScene1 {
-      0%   { top: 300px; left: 200px; opacity: 0; }
-      10%  { top: 300px; left: 200px; opacity: 1; }
-      50%  { top: 520px; left: 440px; opacity: 1; }
-      55%  { top: 518px; left: 438px; }
-      60%  { top: 520px; left: 440px; }
-      100% { top: 520px; left: 440px; opacity: 1; }
-    }
-    @keyframes cursorScene2 {
-      0%   { top: 520px; left: 440px; opacity: 1; }
-      30%  { top: 700px; left: 300px; opacity: 1; }
-      35%  { top: 698px; left: 298px; }
-      40%  { top: 700px; left: 300px; }
-      70%  { top: 850px; left: 500px; opacity: 1; }
-      75%  { top: 848px; left: 498px; }
-      80%  { top: 850px; left: 500px; }
-      100% { top: 850px; left: 500px; opacity: 0; }
-    }
+    #cursor svg { width: 36px; height: 44px; }
 
     /* ── Click ripple ── */
-    .ripple {
-      position: absolute; width: 40px; height: 40px;
+    .click-ripple {
+      position: absolute; width: 24px; height: 24px;
       border: 2px solid {{ACCENT_COLOR}}; border-radius: 50%;
-      opacity: 0; z-index: 9998; pointer-events: none;
+      z-index: 9998; pointer-events: none;
+      opacity: 0;
     }
-    @keyframes rippleOut {
-      0% { transform: scale(0); opacity: 0.8; }
-      100% { transform: scale(3); opacity: 0; }
+    .click-ripple.active {
+      animation: rippleBurst 0.5s ease-out forwards;
+    }
+    @keyframes rippleBurst {
+      0% { transform: translate(-50%,-50%) scale(0); opacity: 0.9; }
+      100% { transform: translate(-50%,-50%) scale(4); opacity: 0; }
     }
 
     /* ══════════════════════════════════════════
@@ -102,9 +88,7 @@
       display: flex; align-items: center; padding: 0 18px; gap: 10px;
       border-bottom: 1px solid rgba(255,255,255,0.05);
     }
-    .term-dot {
-      width: 14px; height: 14px; border-radius: 50%;
-    }
+    .term-dot { width: 14px; height: 14px; border-radius: 50%; }
     .term-dot.r { background: #ff5f57; }
     .term-dot.y { background: #febc2e; }
     .term-dot.g { background: #28c840; }
@@ -112,25 +96,23 @@
     .term-body { padding: 28px 24px; min-height: 200px; }
 
     .term-prompt {
-      color: {{ACCENT_COLOR}}; font-family: 'SF Mono', 'Fira Code', monospace;
+      color: {{ACCENT_COLOR}}; font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
       font-size: 22px; letter-spacing: -0.02em;
     }
     .term-prompt::before { content: "❯ "; color: #666; }
 
     .term-cmd {
       display: inline; color: #e0e0e0;
-      font-family: 'SF Mono', 'Fira Code', monospace; font-size: 22px;
+      font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace; font-size: 22px;
     }
 
     .term-output {
-      margin-top: 16px; font-family: 'SF Mono', 'Fira Code', monospace;
-      font-size: 18px; color: #888; line-height: 1.6;
-      opacity: 0;
+      margin-top: 16px; font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+      font-size: 18px; color: #888; line-height: 1.6; opacity: 0;
     }
     .scene.active .term-output {
       animation: fadeIn 0.4s ease 2.8s forwards;
     }
-
     .term-output .check { color: #28c840; }
     .term-output .spin { color: {{ACCENT_COLOR}}; }
 
@@ -158,9 +140,7 @@
       border-radius: 18px; padding: 24px 20px;
       display: flex; flex-direction: column; align-items: center;
       gap: 12px; opacity: 0; transform: translateY(30px);
-      transition: background 0.3s;
     }
-    .model-card:hover { background: rgba(255,255,255,0.08); }
 
     .scene.active .model-card {
       animation: cardIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -178,9 +158,7 @@
     .scene.active .model-card:nth-child(11) { animation-delay: 0.6s; }
     .scene.active .model-card:nth-child(12) { animation-delay: 0.65s; }
 
-    @keyframes cardIn {
-      to { opacity: 1; transform: translateY(0); }
-    }
+    @keyframes cardIn { to { opacity: 1; transform: translateY(0); } }
 
     .card-icon {
       width: 52px; height: 52px; border-radius: 14px;
@@ -192,7 +170,7 @@
       letter-spacing: -0.02em; text-align: center;
     }
 
-    /* Card color accents */
+    /* Card colors */
     .card-gemini   .card-icon { background: linear-gradient(135deg, #4285f4, #ea4335); }
     .card-gpt      .card-icon { background: linear-gradient(135deg, #10a37f, #1a7f64); }
     .card-claude   .card-icon { background: linear-gradient(135deg, #d4a574, #c4956a); }
@@ -206,27 +184,31 @@
     .card-ollama   .card-icon { background: linear-gradient(135deg, #333, #555); }
     .card-lmstudio .card-icon { background: linear-gradient(135deg, #06b6d4, #0891b2); }
 
+    /* Highlight card when cursor is near */
+    .model-card.highlighted {
+      background: rgba(255,255,255,0.12) !important;
+      border-color: {{ACCENT_COLOR}}55 !important;
+      transform: scale(1.05) !important;
+      transition: all 0.3s ease;
+    }
+
     /* ══════════════════════════════════════════
        SCENE 3 — Headline + Logo
        ══════════════════════════════════════════ */
     .finale { text-align: center; }
-
     .finale-logo {
-      width: 100px; height: 100px; border-radius: 24px;
-      margin: 0 auto 40px; opacity: 0; transform: scale(0.8);
-      box-shadow: 0 16px 48px rgba(0,0,0,0.4);
-      object-fit: contain;
+      width: 120px; height: 120px; border-radius: 28px;
+      margin: 0 auto 44px; opacity: 0; transform: scale(0.8);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5); object-fit: contain;
     }
     .scene.active .finale-logo {
       animation: logoIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
     }
-    @keyframes logoIn {
-      to { opacity: 1; transform: scale(1); }
-    }
+    @keyframes logoIn { to { opacity: 1; transform: scale(1); } }
 
     .finale-headline {
       font-size: 56px; font-weight: 800; letter-spacing: -0.05em;
-      line-height: 1.15; max-width: 700px; margin: 0 auto;
+      line-height: 1.15; max-width: 720px; margin: 0 auto;
       opacity: 0; transform: translateY(24px);
     }
     .scene.active .finale-headline {
@@ -244,10 +226,10 @@
 
     .finale-cta {
       display: inline-block; margin-top: 48px;
-      padding: 18px 48px; border-radius: 14px;
+      padding: 20px 52px; border-radius: 14px;
       background: {{ACCENT_COLOR}}; color: #fff;
       font-size: 22px; font-weight: 700; letter-spacing: -0.02em;
-      box-shadow: 0 8px 32px {{ACCENT_COLOR}}44;
+      box-shadow: 0 10px 36px {{ACCENT_COLOR}}44;
       opacity: 0; transform: translateY(16px);
     }
     .scene.active .finale-cta {
@@ -263,9 +245,7 @@
     .scene.active .brand-close {
       animation: brandIn 1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
     }
-    @keyframes brandIn {
-      to { opacity: 1; transform: scale(1); }
-    }
+    @keyframes brandIn { to { opacity: 1; transform: scale(1); } }
     .brand-name {
       font-size: 72px; font-weight: 800; letter-spacing: -0.06em;
       background: linear-gradient(135deg, #fff 0%, {{ACCENT_COLOR}} 100%);
@@ -277,13 +257,9 @@
       letter-spacing: 0.15em; text-transform: uppercase; margin-top: 16px;
     }
 
-    /* ── Shared keyframes ── */
-    @keyframes slideUp {
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes fadeIn {
-      to { opacity: 1; }
-    }
+    /* ── Shared ── */
+    @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn { to { opacity: 1; } }
   </style>
 </head>
 <body>
@@ -292,11 +268,16 @@
 
     <!-- Cursor -->
     <div id="cursor">
-      <svg width="24" height="28" viewBox="0 0 24 36">
+      <svg width="36" height="44" viewBox="0 0 24 36">
         <path d="M0 0L9.5 35.3L13 20.3L24.8 25.9L0 0Z" fill="#000"/>
         <path d="M1.6 2.5L9.6 32.2L12.8 18.2L22.6 22.8L1.6 2.5Z" fill="#fff"/>
       </svg>
     </div>
+
+    <!-- Click ripples (reused by JS) -->
+    <div class="click-ripple" id="ripple1"></div>
+    <div class="click-ripple" id="ripple2"></div>
+    <div class="click-ripple" id="ripple3"></div>
 
     <!-- Scene 1: Terminal -->
     <section class="scene" id="scene-terminal">
@@ -323,7 +304,7 @@
     <!-- Scene 2: Model Grid -->
     <section class="scene" id="scene-grid">
       <div class="grid-title">{{GRID_TITLE}}</div>
-      <div class="model-grid">
+      <div class="model-grid" id="modelGrid">
         <div class="model-card card-gemini"><div class="card-icon">G</div><div class="card-name">Gemini</div></div>
         <div class="model-card card-gpt"><div class="card-icon">⬡</div><div class="card-name">GPT-4o</div></div>
         <div class="model-card card-claude"><div class="card-icon">C</div><div class="card-name">Claude</div></div>
@@ -369,17 +350,51 @@
     window.__animationDurationMs = scenes.reduce((s, sc) => s + sc.duration, 0);
 
     const cursor = document.getElementById("cursor");
+    const stage = document.querySelector(".stage");
     let sceneTimeout;
     let idx = 0;
+    let cursorAnim = null;
+
+    // ── Smooth cursor movement with JS (not CSS keyframes) ──
+    function animateCursor(keyframes, duration, cb) {
+      if (cursorAnim) cursorAnim.cancel();
+      cursor.style.opacity = "1";
+      cursorAnim = cursor.animate(keyframes, {
+        duration: duration,
+        easing: "cubic-bezier(0.4, 0, 0.2, 1)",
+        fill: "forwards"
+      });
+      if (cb) cursorAnim.onfinish = cb;
+    }
+
+    // ── Click ripple at position ──
+    let rippleIdx = 0;
+    function clickAt(x, y) {
+      const ripple = document.getElementById("ripple" + ((rippleIdx++ % 3) + 1));
+      ripple.classList.remove("active");
+      ripple.style.left = x + "px";
+      ripple.style.top = y + "px";
+      void ripple.offsetWidth;
+      ripple.classList.add("active");
+    }
+
+    // ── Highlight card near cursor ──
+    function highlightCard(cardIdx) {
+      const cards = document.querySelectorAll(".model-card");
+      cards.forEach(c => c.classList.remove("highlighted"));
+      if (cardIdx >= 0 && cardIdx < cards.length) {
+        cards[cardIdx].classList.add("highlighted");
+      }
+    }
 
     // ── Typing effect ──
-    function typeCommand(text, el, speed, cb) {
+    function typeCommand(text, el, speed) {
       let i = 0;
       function next() {
         if (i < text.length) {
           el.textContent += text[i++];
           setTimeout(next, speed);
-        } else if (cb) cb();
+        }
       }
       next();
     }
@@ -388,32 +403,81 @@
     function showScene(i) {
       clearTimeout(sceneTimeout);
       document.querySelectorAll(".scene").forEach(s => s.classList.remove("active"));
+      document.querySelectorAll(".model-card").forEach(c => c.classList.remove("highlighted"));
       const el = document.getElementById(scenes[i].id);
       el.classList.add("active");
 
-      // Reset animations
+      // Reset CSS animations
       el.querySelectorAll(".terminal, .grid-title, .model-card, .finale-logo, .finale-headline, .finale-subline, .finale-cta, .brand-close, .term-output").forEach(n => {
         n.style.animation = "none";
         void n.offsetWidth;
         n.style.animation = "";
       });
 
-      // Cursor animation per scene
+      // ── Scene 1: Terminal — cursor glides in, clicks terminal, typing starts ──
       if (i === 0) {
-        cursor.style.animation = "cursorScene1 5s ease-in-out forwards";
         const cmdEl = document.getElementById("typedCmd");
         cmdEl.textContent = "";
-        setTimeout(() => typeCommand("{{COMMAND}}", cmdEl, 60), 1200);
-      } else if (i === 1) {
-        cursor.style.animation = "cursorScene2 6s ease-in-out forwards";
-      } else {
-        cursor.style.animation = "none";
+
+        // Cursor starts off-screen top, glides to terminal area
+        animateCursor([
+          { top: "200px", left: "300px", opacity: 0 },
+          { top: "400px", left: "420px", opacity: 1, offset: 0.2 },
+          // Glide to terminal body
+          { top: "680px", left: "500px", opacity: 1, offset: 0.4 },
+          // Micro-click (dip)
+          { top: "684px", left: "502px", opacity: 1, offset: 0.42 },
+          { top: "680px", left: "500px", opacity: 1, offset: 0.44 },
+          // Stay while typing
+          { top: "680px", left: "620px", opacity: 1, offset: 0.9 },
+          { top: "680px", left: "620px", opacity: 1 }
+        ], 5000);
+
+        // Click ripple when cursor reaches terminal
+        setTimeout(() => clickAt(500, 680), 2000);
+        // Start typing after click
+        setTimeout(() => typeCommand("{{COMMAND}}", cmdEl, 55), 2200);
+      }
+
+      // ── Scene 2: Grid — cursor moves across cards, clicking 3 of them ──
+      else if (i === 1) {
+        animateCursor([
+          { top: "680px", left: "620px", opacity: 1 },
+          // Move to first card row (Gemini)
+          { top: "820px", left: "250px", opacity: 1, offset: 0.12 },
+          // Click Gemini
+          { top: "824px", left: "252px", opacity: 1, offset: 0.14 },
+          { top: "820px", left: "250px", opacity: 1, offset: 0.16 },
+          // Move to Claude
+          { top: "820px", left: "620px", opacity: 1, offset: 0.35 },
+          // Click Claude
+          { top: "824px", left: "622px", opacity: 1, offset: 0.37 },
+          { top: "820px", left: "620px", opacity: 1, offset: 0.39 },
+          // Move to Groq
+          { top: "945px", left: "620px", opacity: 1, offset: 0.58 },
+          // Click Groq
+          { top: "949px", left: "622px", opacity: 1, offset: 0.60 },
+          { top: "945px", left: "620px", opacity: 1, offset: 0.62 },
+          // Drift to center and fade
+          { top: "900px", left: "540px", opacity: 0.5, offset: 0.85 },
+          { top: "900px", left: "540px", opacity: 0 }
+        ], 6000);
+
+        // Click ripples synced with cursor keyframes
+        setTimeout(() => { clickAt(250, 820); highlightCard(0); }, 840);  // Gemini
+        setTimeout(() => { clickAt(620, 820); highlightCard(2); }, 2100);  // Claude
+        setTimeout(() => { clickAt(620, 945); highlightCard(6); }, 3480);  // Groq
+      }
+
+      // ── Scenes 3 & 4: No cursor ──
+      else {
+        if (cursorAnim) cursorAnim.cancel();
         cursor.style.opacity = "0";
       }
 
       sceneTimeout = setTimeout(() => {
         idx = (idx + 1) % scenes.length;
-        if (idx === 0) return; // Don't loop
+        if (idx === 0) return;
         showScene(idx);
       }, scenes[i].duration);
     }

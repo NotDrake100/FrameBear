@@ -243,10 +243,14 @@ async function renderVideo(htmlPath, outputPath, audioPath) {
   const { spawnSync } = require('child_process');
   let ffmpegArgs;
   if (audioPath && fs.existsSync(audioPath)) {
-    info(`Mixing audio: ${path.basename(audioPath)}`);
+    const videoDurSec = (durationMs / 1000).toFixed(2);
+    const fadeOutStart = Math.max(0, parseFloat(videoDurSec) - 1.5).toFixed(2);
+    info(`Mixing audio: ${path.basename(audioPath)} (trimmed to ${videoDurSec}s with fade)`);
     ffmpegArgs = ['-y', '-i', rawVideoPath, '-i', audioPath,
       '-c:v', 'libx264', '-crf', '18', '-preset', 'fast', '-pix_fmt', 'yuv420p',
-      '-c:a', 'aac', '-b:a', '192k', '-shortest', '-movflags', '+faststart', outputPath];
+      '-af', `afade=t=in:st=0:d=0.5,afade=t=out:st=${fadeOutStart}:d=1.5`,
+      '-c:a', 'aac', '-b:a', '192k', '-t', videoDurSec,
+      '-movflags', '+faststart', outputPath];
   } else {
     ffmpegArgs = ['-y', '-i', rawVideoPath,
       '-c:v', 'libx264', '-crf', '18', '-preset', 'fast', '-pix_fmt', 'yuv420p',
