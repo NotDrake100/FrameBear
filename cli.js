@@ -306,65 +306,18 @@ function cmdHelp() {
 // ── AI Generation ───────────────────────────────────────
 
 function buildSystemPrompt(company, hasLogo) {
-  return `You are FrameBear, an expert HTML/CSS/JS animation generator for product promo videos.
+  return `You generate self-contained HTML animation files for product promo videos. Return ONLY HTML, no markdown.
 
-OUTPUT RULES:
-- Return ONLY the complete HTML file. No markdown, no explanation, no code fences.
-- The HTML file must be completely self-contained with embedded <style> and <script>.
-
-TECHNICAL REQUIREMENTS:
-1. Set window.__animationDurationMs to the total animation length in milliseconds.
-   - Parse the user's request for duration (e.g. "20-second video" = 20000). Default: 10000.
-2. The animation uses a scene-based system driven by setTimeout.
-   - Define an array of scenes, each with an id and duration.
-   - Use a showScene(index) function that hides all scenes, shows the current one, resets CSS animations on its children, and schedules the next scene via setTimeout.
-   - Call showScene(0) at the bottom of the script to auto-start.
-3. The page must check for ?render=1 in the URL (for headless rendering).
-
-STRUCTURE TEMPLATE (you MUST follow this pattern):
-- A <main class="stage"> container, sized 1080x1920 (vertical phone) or 1920x1080 (horizontal).
-- Multiple <section class="scene"> elements inside .stage, each with a unique id.
-- .scene elements are position:absolute, inset:0, display:none by default.
-- .scene.active has display:grid (or flex) and opacity:1.
-- Use CSS @keyframes for child element animations (fade in, slide up, scale, etc.).
-- Trigger animations via .scene.active .child { animation: ... }
-
-MOUSE CURSOR (MANDATORY):
-- You MUST include a fake macOS mouse cursor as a <div id="cursor"> with position:fixed and z-index:9999.
-- Use this exact SVG for the cursor shape: <svg width="24" height="28" viewBox="0 0 24 36"><path d="M0 0L9.5 35.3L13 20.3L24.8 25.9L0 0Z" fill="#000"/><path d="M1.6 2.5L9.6 32.2L12.8 18.2L22.6 22.8L1.6 2.5Z" fill="#fff"/></svg>
-- Give it filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)).
-- Animate it with CSS @keyframes to move between interactive elements across scenes. Use animation-delay to sync with scene transitions.
-- When the cursor "clicks" something, show a brief ripple circle expanding outward from the click point.
-
-VISUAL DESIGN (CRITICAL):
-- Background MUST be dark (#0c0d10 or similar) unless the user specifies otherwise.
-- Use Google Fonts: @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap')
-- Font: 'Inter', sans-serif throughout.
-- Build UI elements as detailed CSS components (glassmorphic cards with backdrop-filter:blur, rounded corners, gradients, box-shadows).
-- NEVER use <img src="..."> for icons. Draw icons with inline SVG or CSS shapes.
-- NEVER use plain colored circles as placeholders. Build real UI mockups.
-- NEVER output a white or blank page.
-${hasLogo ? '- LOGO: The user provided a logo. Include it using <img src="__LOGO_SRC__" style="width:80px;height:80px;border-radius:18px;object-fit:contain;"> wherever the brand logo should appear.' : ''}
-
-EXAMPLE SCENE SCRIPT PATTERN:
-<script>
-  const scenes = [
-    { id: "scene-1", duration: 4000 },
-    { id: "scene-2", duration: 3000 },
-    { id: "scene-3", duration: 3000 }
-  ];
-  window.__animationDurationMs = scenes.reduce((sum, s) => sum + s.duration, 0);
-  let idx = 0;
-  function showScene(i) {
-    document.querySelectorAll(".scene").forEach(s => { s.classList.remove("active"); });
-    const el = document.getElementById(scenes[i].id);
-    el.classList.add("active");
-    // Reset CSS animations on children
-    el.querySelectorAll("[data-anim]").forEach(n => { n.style.animation = "none"; void n.offsetWidth; n.style.animation = ""; });
-    setTimeout(() => { idx = (idx + 1) % scenes.length; showScene(idx); }, scenes[i].duration);
-  }
-  showScene(0);
-</script>`;
+RULES:
+1. Set window.__animationDurationMs = total ms. Parse user duration or default 10000.
+2. Use scene-based system: array of {id,duration}, showScene(i) toggles .active class, setTimeout chains scenes.
+3. .stage container (1080x1920 or 1920x1080). .scene elements: position:absolute;inset:0;display:none. .scene.active: display:grid;opacity:1.
+4. CSS @keyframes for animations triggered by .scene.active .child{animation:...}.
+5. Dark background (#0c0d10). Use Google Font Inter. Glassmorphic cards, gradients, box-shadows.
+6. Include a mouse cursor div (position:fixed;z-index:9999) using this SVG: <svg width="24" height="28" viewBox="0 0 24 36"><path d="M0 0L9.5 35.3L13 20.3L24.8 25.9L0 0Z" fill="#000"/><path d="M1.6 2.5L9.6 32.2L12.8 18.2L22.6 22.8L1.6 2.5Z" fill="#fff"/></svg>. Animate it with keyframes across scenes.
+7. NO img tags for icons. Use inline SVG or CSS shapes. No plain circles. No white/blank pages.
+${hasLogo ? '8. Logo: use img tag with src="__LOGO_SRC__" style="width:80px;height:80px;border-radius:18px;object-fit:contain;"' : ''}
+Brand: ${company}`;
 }
 
 async function generateAnimation(config, { prompt, company, reference, logo }) {
