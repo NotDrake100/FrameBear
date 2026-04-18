@@ -57,6 +57,14 @@ function saveConfig(config) {
   fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2));
 }
 
+function cleanPath(p) {
+  if (!p) return '';
+  p = p.replace(/\\/g, '').trim();
+  if (p.startsWith("'") && p.endsWith("'")) p = p.slice(1, -1);
+  if (p.startsWith('"') && p.endsWith('"')) p = p.slice(1, -1);
+  return p;
+}
+
 // ── Banner ──────────────────────────────────────────────
 function showBanner() {
   console.log();
@@ -166,29 +174,15 @@ async function cmdGenerate(args) {
   if (!company) company = await ask('Company/brand name:');
   if (!reference) {
     let ref = await ask('Reference video path (optional, press Enter to skip):');
-    if (ref) {
-      // Remove escape slashes added by macOS terminal drag-and-drop
-      reference = ref.replace(/\\/g, '').trim();
-      // Remove surrounding quotes if added
-      if (reference.startsWith("'") && reference.endsWith("'")) reference = reference.slice(1, -1);
-      if (reference.startsWith('"') && reference.endsWith('"')) reference = reference.slice(1, -1);
-    }
+    reference = cleanPath(ref);
   }
   if (!audio) {
     let aud = await ask('Audio song path (optional, press Enter to skip):');
-    if (aud) {
-      audio = aud.replace(/\\/g, '').trim();
-      if (audio.startsWith("'") && audio.endsWith("'")) audio = audio.slice(1, -1);
-      if (audio.startsWith('"') && audio.endsWith('"')) audio = audio.slice(1, -1);
-    }
+    audio = cleanPath(aud);
   }
   if (!logo) {
     let lg = await ask('Logo image path (optional, press Enter to skip):');
-    if (lg) {
-      logo = lg.replace(/\\/g, '').trim();
-      if (logo.startsWith("'") && logo.endsWith("'")) logo = logo.slice(1, -1);
-      if (logo.startsWith('"') && logo.endsWith('"')) logo = logo.slice(1, -1);
-    }
+    logo = cleanPath(lg);
   }
   if (!output) output = `rendered/${company.toLowerCase().replace(/[^a-z0-9]/g, '_')}_promo.mp4`;
 
@@ -207,17 +201,21 @@ async function cmdGenerate(args) {
     success('Reference analyzed');
   }
 
-  // Step 2: Generate HTML animation via AI
-  info('Generating HTML animation via AI...');
-
+  // Step 2: Prepare logo as base64 data URI
   let logoDataUri = '';
   if (logo && fs.existsSync(logo)) {
     try {
       const ext = path.extname(logo).slice(1) || 'png';
       const b64 = fs.readFileSync(logo).toString('base64');
       logoDataUri = `data:image/${ext};base64,${b64}`;
-    } catch(e) {}
+      success('Logo embedded as base64');
+    } catch(e) {
+      err(`Could not read logo: ${e.message}`);
+    }
   }
+
+  // Step 3: Generate HTML animation via AI
+  info('Generating HTML animation via AI...');
 
   let htmlContent;
   try {
@@ -228,14 +226,14 @@ async function cmdGenerate(args) {
     process.exit(1);
   }
 
-  // Step 3: Save HTML
+  // Step 4: Save HTML
   const htmlPath = output.replace('.mp4', '.html');
   fs.mkdirSync(path.dirname(htmlPath), { recursive: true });
   fs.writeFileSync(htmlPath, htmlContent);
   success(`Animation saved → ${htmlPath}`);
 
-  // Step 4: Render to MP4
-  info('Rendering frames with Playwright...');
+  // Step 5: Render to MP4
+  info('Rendering video with Playwright...');
 
   try {
     await renderVideo(htmlPath, output, audio);
@@ -307,40 +305,85 @@ function cmdHelp() {
 
 // ── AI Generation ───────────────────────────────────────
 
+function buildSystemPrompt(company, logo) {
+  return `You are FrameBear, an expert HTML/CSS/JS animation generator for product promo videos.
+
+OUTPUT RULES:
+- Return ONLY the complete HTML file. No markdown, no explanation, no code fences.
+- The HTML file must be completely self-contained with embedded <style> and <script>.
+
+TECHNICAL REQUIREMENTS:
+1. Set window.__animationDurationMs to the total animation length in milliseconds.
+   - Parse the user's request for duration (e.g. "20-second video" = 20000). Default: 10000.
+2. The animation uses a scene-based system driven by setTimeout.
+   - Define an array of scenes, each with an id and duration.
+   - Use a showScene(index) function that hides all scenes, shows the current one, resets CSS animations on its children, and schedules the next scene via setTimeout.
+   - Call showScene(0) at the bottom of the script to auto-start.
+3. The page must check for ?render=1 in the URL (for headless rendering).
+
+STRUCTURE TEMPLATE (you MUST follow this pattern):
+- A <main class="stage"> container, sized 1080x1920 (vertical phone) or 1920x1080 (horizontal).
+- Multiple <section class="scene"> elements inside .stage, each with a unique id.
+- .scene elements are position:absolute, inset:0, display:none by default.
+- .scene.active has display:grid (or flex) and opacity:1.
+- Use CSS @keyframes for child element animations (fade in, slide up, scale, etc.).
+- Trigger animations via .scene.active .child { animation: ... }
+
+MOUSE CURSOR (MANDATORY):
+- You MUST include a fake macOS mouse cursor as a <div id="cursor"> with position:fixed and z-index:9999.
+- Use this exact SVG for the cursor shape: <svg width="24" height="28" viewBox="0 0 24 36"><path d="M0 0L9.5 35.3L13 20.3L24.8 25.9L0 0Z" fill="#000"/><path d="M1.6 2.5L9.6 32.2L12.8 18.2L22.6 22.8L1.6 2.5Z" fill="#fff"/></svg>
+- Give it filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)).
+- Animate it with CSS @keyframes to move between interactive elements across scenes. Use animation-delay to sync with scene transitions.
+- When the cursor "clicks" something, show a brief ripple circle expanding outward from the click point.
+
+VISUAL DESIGN (CRITICAL):
+- Background MUST be dark (#0c0d10 or similar) unless the user specifies otherwise.
+- Use Google Fonts: @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap')
+- Font: 'Inter', sans-serif throughout.
+- Build UI elements as detailed CSS components (glassmorphic cards with backdrop-filter:blur, rounded corners, gradients, box-shadows).
+- NEVER use <img src="..."> for icons. Draw icons with inline SVG or CSS shapes.
+- NEVER use plain colored circles as placeholders. Build real UI mockups.
+- NEVER output a white or blank page.
+${logo ? `- LOGO: Include this logo using <img src="${logo}" style="width:80px;height:80px;border-radius:18px;">` : ''}
+
+EXAMPLE SCENE SCRIPT PATTERN:
+<script>
+  const scenes = [
+    { id: "scene-1", duration: 4000 },
+    { id: "scene-2", duration: 3000 },
+    { id: "scene-3", duration: 3000 }
+  ];
+  window.__animationDurationMs = scenes.reduce((sum, s) => sum + s.duration, 0);
+  let idx = 0;
+  function showScene(i) {
+    document.querySelectorAll(".scene").forEach(s => { s.classList.remove("active"); });
+    const el = document.getElementById(scenes[i].id);
+    el.classList.add("active");
+    // Reset CSS animations on children
+    el.querySelectorAll("[data-anim]").forEach(n => { n.style.animation = "none"; void n.offsetWidth; n.style.animation = ""; });
+    setTimeout(() => { idx = (idx + 1) % scenes.length; showScene(idx); }, scenes[i].duration);
+  }
+  showScene(0);
+</script>`;
+}
+
 async function generateAnimation(config, { prompt, company, reference, logo }) {
-  const systemPrompt = `You are FrameBear, an expert HTML/CSS/JS animation generator.
-Create a complete, self-contained HTML file that produces a visually stunning product promo animation.
-
-Strict Requirements:
-1. Must define window.__animationDurationMs. Calculate this duration dynamically based on the user's prompt (e.g., if they ask for a 20-second video, set it to 20000). Default to 5000 if unspecified.
-2. Must define a global runSequence() function that starts the animation automatically.
-3. Include a ?render=1 query param check for headless rendering.
-4. Resolution: 1080x1920 (Vertical) or 1920x1080 (Horizontal).
-5. Brand name: ${company}
-${logo ? `6. LOCAL LOGO PROVIDED: You MUST include an <img src="${logo}"> tag prominently in the layout.` : ''}
-
-Animation & Styling Excellence (CRITICAL):
-- DO NOT return a blank screen! You must fulfill the user's background color requests.
-- USE CSS @keyframes and 'animation' properties. Make elements slide in (transform), fade in (opacity), bounce, or scale up sequentially (using animation-delay).
-- MUST INCLUDE A MOUSE CURSOR: You MUST create a synthetic OS-like mouse cursor using EXACTLY this SVG: <svg width="32" height="32" viewBox="0 0 24 36"><path d="M0 0L9.525 35.3361L12.9818 20.3015L24.8198 25.8672L0 0Z" fill="black"/><path d="M1.60335 2.50289L9.59364 32.1873L12.8028 18.2125L22.6186 22.8272L1.60335 2.50289Z" fill="white"/></svg>. Give it a drop shadow and animate it mathematically across the screen.
-- GRIDS AND ICONS: Do NOT use <img src="..."> tags for anything other than the exact LOCAL LOGO provided. For all other grid items or brand icons, you MUST use CSS to draw sophisticated UI elements with gradients, shadows, text, and glassmorphism.
-- Provide highly polished, professional visual aesthetics matching Apple or Stripe marketing. Never generate a plain white page unless explicitly asked.`;
+  const systemPrompt = buildSystemPrompt(company, logo);
 
   const userPrompt = `Create an HTML animation for: ${prompt}
 Brand: ${company}
 ${reference ? `Reference style: The user provided a reference video for style inspiration.` : ''}
 
-Generate a COMPLETE HTML file with embedded CSS and JavaScript. No external dependencies.`;
+Generate a COMPLETE HTML file. No markdown code fences. Just pure HTML.`;
+
+  let text = '';
 
   if (config.provider === 'google') {
     const { GoogleGenerativeAI } = require('@google/generative-ai');
     const genAI = new GoogleGenerativeAI(config.apiKey);
     const model = genAI.getGenerativeModel({ model: config.model });
     const result = await model.generateContent(systemPrompt + '\n\n' + userPrompt);
-    const text = result.response.text();
-    // Extract HTML from markdown code blocks if present
-    const htmlMatch = text.match(/```html\n([\s\S]*?)```/) || text.match(/```\n([\s\S]*?)```/);
-    return htmlMatch ? htmlMatch[1] : text;
+    text = result.response.text();
 
   } else if (config.provider === 'openai') {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -352,14 +395,12 @@ Generate a COMPLETE HTML file with embedded CSS and JavaScript. No external depe
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        max_tokens: 8000,
+        max_tokens: 16000,
       }),
     });
     const data = await response.json();
     if (data.error) throw new Error(data.error.message);
-    const text = data.choices[0].message.content;
-    const htmlMatch = text.match(/```html\n([\s\S]*?)```/) || text.match(/```\n([\s\S]*?)```/);
-    return htmlMatch ? htmlMatch[1] : text;
+    text = data.choices[0].message.content;
 
   } else if (config.provider === 'anthropic') {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -371,16 +412,14 @@ Generate a COMPLETE HTML file with embedded CSS and JavaScript. No external depe
       },
       body: JSON.stringify({
         model: config.model === 'claude-sonnet' ? 'claude-sonnet-4-20250514' : 'claude-opus-4-20250514',
-        max_tokens: 8000,
+        max_tokens: 16000,
         system: systemPrompt,
         messages: [{ role: 'user', content: userPrompt }],
       }),
     });
     const data = await response.json();
     if (data.error) throw new Error(data.error.message);
-    const text = data.content[0].text;
-    const htmlMatch = text.match(/```html\n([\s\S]*?)```/) || text.match(/```\n([\s\S]*?)```/);
-    return htmlMatch ? htmlMatch[1] : text;
+    text = data.content[0].text;
 
   } else if (config.provider === 'groq') {
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -392,31 +431,43 @@ Generate a COMPLETE HTML file with embedded CSS and JavaScript. No external depe
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
+        max_tokens: 16000,
       }),
     });
     const data = await response.json();
     if (data.error) throw new Error(data.error.message);
-    const text = data.choices[0].message.content;
-    const htmlMatch = text.match(/```html\n([\s\S]*?)```/) || text.match(/```\n([\s\S]*?)```/);
-    return htmlMatch ? htmlMatch[1] : text;
+    text = data.choices[0].message.content;
 
   } else if (config.provider === 'local') {
     const response = await fetch('http://localhost:11434/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: config.apiKey, // model name stored in apiKey field for local
+        model: config.apiKey,
         prompt: systemPrompt + '\n\n' + userPrompt,
         stream: false,
       }),
     });
     const data = await response.json();
-    const text = data.response;
-    const htmlMatch = text.match(/```html\n([\s\S]*?)```/) || text.match(/```\n([\s\S]*?)```/);
-    return htmlMatch ? htmlMatch[1] : text;
+    text = data.response;
+  } else {
+    throw new Error('Unsupported provider: ' + config.provider);
   }
 
-  throw new Error('Unsupported provider: ' + config.provider);
+  // Extract HTML: try code fences first, then raw
+  const htmlMatch = text.match(/```html\n([\s\S]*?)```/) || text.match(/```\n([\s\S]*?)```/);
+  if (htmlMatch) return htmlMatch[1];
+
+  // If it starts with <!DOCTYPE or <html, it's raw HTML
+  const trimmed = text.trim();
+  if (trimmed.startsWith('<!') || trimmed.startsWith('<html')) return trimmed;
+
+  // Last resort: find the first < to last >
+  const firstTag = trimmed.indexOf('<');
+  const lastTag = trimmed.lastIndexOf('>');
+  if (firstTag !== -1 && lastTag !== -1) return trimmed.substring(firstTag, lastTag + 1);
+
+  return trimmed;
 }
 
 // ── Renderer ────────────────────────────────────────────
@@ -425,61 +476,102 @@ async function renderVideo(htmlPath, outputPath, audioPath) {
   const { chromium } = require('playwright');
   const { execSync } = require('child_process');
 
+  const FFMPEG = fs.existsSync('/opt/homebrew/bin/ffmpeg') ? '/opt/homebrew/bin/ffmpeg' : 'ffmpeg';
+
   const htmlContent = fs.readFileSync(htmlPath, 'utf8');
-  let durationMs = 5000;
+
+  // Parse duration from the HTML
+  let durationMs = 10000;
   const durMatch = htmlContent.match(/window\.__animationDurationMs\s*=\s*(\d+)/);
   if (durMatch) durationMs = parseInt(durMatch[1], 10);
-  
-  // Decide orientation
-  let w = 1080;
-  let h = 1920;
-  if (htmlContent.includes('1920px') && htmlContent.includes('1080px')) {
-    if (htmlContent.indexOf('1920px') < htmlContent.indexOf('1080px') && htmlContent.includes('width: 1920px')) {
+
+  // Also check for scenes.reduce pattern
+  const scenesDurMatch = htmlContent.match(/scenes\.reduce\(\s*\(\s*sum\s*,\s*s\s*\)\s*=>\s*sum\s*\+\s*s\.duration\s*,\s*0\s*\)/);
+  if (scenesDurMatch) {
+    // Try to extract individual scene durations
+    const sceneDurs = [...htmlContent.matchAll(/duration:\s*(\d+)/g)];
+    if (sceneDurs.length > 0) {
+      const total = sceneDurs.reduce((sum, m) => sum + parseInt(m[1], 10), 0);
+      if (total > 0) durationMs = total;
+    }
+  }
+
+  // Decide orientation from content
+  let w = 1080, h = 1920; // default vertical
+  if (htmlContent.includes('1920') && htmlContent.includes('1080')) {
+    // Check if it's horizontal (width=1920, height=1080)
+    if (/width\s*[:=]\s*['"]?1920/i.test(htmlContent) && /height\s*[:=]\s*['"]?1080/i.test(htmlContent)) {
       w = 1920; h = 1080;
     }
   }
 
-  info('Starting Playwright real-time compositor capture...');
+  info(`Video: ${w}x${h}, duration: ${(durationMs / 1000).toFixed(1)}s`);
+
+  // Use Playwright's built-in video recording (real-time compositor)
+  const rawDir = path.join(path.dirname(outputPath), '.framebear_raw');
+  fs.mkdirSync(rawDir, { recursive: true });
+
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
     viewport: { width: w, height: h },
     deviceScaleFactor: 1,
     recordVideo: {
-      dir: path.dirname(outputPath),
+      dir: rawDir,
       size: { width: w, height: h }
     }
   });
 
   const page = await context.newPage();
-  
-  // Navigate and immediately start real-time wait
+
+  // Navigate and wait for fonts to load
   const fileUrl = `file://${path.resolve(htmlPath)}?render=1`;
-  await page.goto(fileUrl);
-  
-  info(`Recording for ${durationMs}ms...`);
-  await page.waitForTimeout(durationMs + 200); // 200ms buffer
-  
-  const rawVideoPath = await page.video().path();
+  await page.goto(fileUrl, { waitUntil: 'load' });
+
+  // Give Google Fonts 2 seconds to load
+  await page.waitForTimeout(2000);
+
+  info(`Recording for ${(durationMs / 1000).toFixed(1)}s...`);
+
+  // Wait for the full animation duration
+  await page.waitForTimeout(durationMs + 500);
+
+  // Get the recorded video path before closing
+  const videoObj = page.video();
   await context.close();
   await browser.close();
 
-  // Finalize Encoding
-  info('Finalizing video and audio mixing...');
+  const rawVideoPath = await videoObj.path();
+
+  // Encode final MP4 with FFmpeg
+  info('Encoding final MP4...');
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
 
-  let ffmpegCommand = `ffmpeg -y -i "${rawVideoPath}" -c:v libx264 -pix_fmt yuv420p -preset fast "${outputPath}"`;
-  
+  let ffmpegArgs;
   if (audioPath && fs.existsSync(audioPath)) {
-    info(`Adding audio track: ${path.basename(audioPath)}`);
-    ffmpegCommand = `ffmpeg -y -i "${rawVideoPath}" -i "${audioPath}" -c:v libx264 -c:a aac -shortest -pix_fmt yuv420p -preset fast "${outputPath}"`;
+    info(`Mixing audio: ${path.basename(audioPath)}`);
+    ffmpegArgs = [
+      '-y', '-i', rawVideoPath, '-i', audioPath,
+      '-c:v', 'libx264', '-crf', '18', '-preset', 'fast', '-pix_fmt', 'yuv420p',
+      '-c:a', 'aac', '-b:a', '192k', '-shortest',
+      '-movflags', '+faststart', outputPath
+    ];
+  } else {
+    ffmpegArgs = [
+      '-y', '-i', rawVideoPath,
+      '-c:v', 'libx264', '-crf', '18', '-preset', 'fast', '-pix_fmt', 'yuv420p',
+      '-movflags', '+faststart', outputPath
+    ];
   }
 
-  execSync(ffmpegCommand, {
-    stdio: 'pipe',
-  });
+  const { spawnSync } = require('child_process');
+  const result = spawnSync(FFMPEG, ffmpegArgs, { stdio: 'pipe' });
+  if (result.status !== 0) {
+    const stderr = result.stderr ? result.stderr.toString() : 'unknown error';
+    throw new Error(`FFmpeg failed: ${stderr.slice(-200)}`);
+  }
 
-  // Cleanup raw WebM
-  fs.unlinkSync(rawVideoPath);
+  // Cleanup raw recording
+  fs.rmSync(rawDir, { recursive: true, force: true });
 }
 
 // ── Utilities ───────────────────────────────────────────
