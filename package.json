@@ -1,6 +1,6 @@
 {
   "name": "framebear",
-  "version": "1.0.0",
+  "version": "2.1.0",
   "description": "AI-powered product video generator. Prompt → Video.",
   "bin": {
     "framebear": "./cli.js"

@@ -54,11 +54,20 @@ function cleanPath(p) {
 }
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
+// ── Size Presets ────────────────────────────────────────
+const SIZE_PRESETS = {
+  '9:16':  { w: 1080, h: 1920, label: 'Portrait (9:16) — Reels/TikTok' },
+  '16:9':  { w: 1920, h: 1080, label: 'Landscape (16:9) — YouTube' },
+  '1:1':   { w: 1080, h: 1080, label: 'Square (1:1) — Instagram Post' },
+  '4:5':   { w: 1080, h: 1350, label: 'Portrait (4:5) — Instagram Feed' },
+  '4:3':   { w: 1440, h: 1080, label: 'Classic (4:3)' },
+};
+
 // ── Banner ──────────────────────────────────────────────
 function showBanner() {
   console.log();
   console.log(`  ${c.purple}${c.bold}╭──────────────────────────────────────╮${c.reset}`);
-  console.log(`  ${c.purple}${c.bold}│${c.reset}  🐻 ${c.bold}FrameBear${c.reset} ${c.dim}v2.0.0${c.reset}                  ${c.purple}${c.bold}│${c.reset}`);
+  console.log(`  ${c.purple}${c.bold}│${c.reset}  🐻 ${c.bold}FrameBear${c.reset} ${c.dim}v2.1.0${c.reset}                  ${c.purple}${c.bold}│${c.reset}`);
   console.log(`  ${c.purple}${c.bold}│${c.reset}  ${c.dim}The AI that makes product videos.${c.reset}   ${c.purple}${c.bold}│${c.reset}`);
   console.log(`  ${c.purple}${c.bold}╰──────────────────────────────────────╯${c.reset}`);
   console.log();
@@ -78,10 +87,17 @@ const TEMPLATES = {
     desc: 'Bold kinetic typography with split words + logo CTA',
     placeholders: ['BRAND', 'WORD_1', 'WORD_2', 'SUBLINE', 'CTA_TEXT', 'BRAND_TAGLINE', 'ACCENT_COLOR'],
   },
+  dcn_news: {
+    name: 'DCN News',
+    file: 'dcn_news.html',
+    desc: 'News channel overlay — video + headline + DCN branding + social',
+    placeholders: ['BRAND', 'HEADLINE', 'CITY'],
+    supportsVideo: true,
+  },
 };
 
 // ── Template Engine ─────────────────────────────────────
-function fillTemplate(templateId, values, logoDataUri) {
+function fillTemplate(templateId, values, logoDataUri, videoPath) {
   const tmpl = TEMPLATES[templateId];
   if (!tmpl) throw new Error(`Unknown template: ${templateId}`);
 
@@ -100,6 +116,11 @@ function fillTemplate(templateId, values, logoDataUri) {
     html = html.replace(/<img[^>]*__LOGO_SRC__[^>]*>/g, '');
   }
 
+  // Inject video path (absolute file path for Playwright)
+  if (videoPath) {
+    html = html.replace(/__VIDEO_SRC__/g, videoPath);
+  }
+
   return html;
 }
 
@@ -108,19 +129,21 @@ async function getCustomizations(config, prompt, company, templateId) {
   const tmpl = TEMPLATES[templateId];
   const placeholders = tmpl.placeholders.filter(p => p !== 'ACCENT_COLOR');
 
-  const systemPrompt = `You customize video templates. Given a user prompt and template, return ONLY a JSON object with these keys: ${placeholders.join(', ')}, ACCENT_COLOR.
+  const systemPrompt = `You customize video templates. Given a user prompt and template, return ONLY a JSON object with these keys: ${placeholders.join(', ')}${tmpl.placeholders.includes('ACCENT_COLOR') ? ', ACCENT_COLOR' : ''}.
 Rules:
 - BRAND = company name provided
 - ACCENT_COLOR = a hex color matching the brand vibe (e.g. #9b7fd4 for purple, #10a37f for green)
 - COMMAND = a terminal command the user would type (for product_launch template)
 - WORD_1 and WORD_2 = two powerful words that split the headline (for minimal_text template)
+- HEADLINE = a compelling news headline (for dcn_news template)
+- CITY = the city name (for dcn_news template)
 - Keep text punchy, short, and marketing-grade
 - Return ONLY valid JSON, nothing else`;
 
   const userPrompt = `Template: ${templateId}
 Company: ${company}
 User wants: ${prompt}
-Return JSON with keys: ${placeholders.join(', ')}, ACCENT_COLOR`;
+Return JSON with keys: ${placeholders.join(', ')}${tmpl.placeholders.includes('ACCENT_COLOR') ? ', ACCENT_COLOR' : ''}`;
 
   let text = '';
 
@@ -190,7 +213,7 @@ Return JSON with keys: ${placeholders.join(', ')}, ACCENT_COLOR`;
 }
 
 // ── Renderer ────────────────────────────────────────────
-async function renderVideo(htmlPath, outputPath, audioPath) {
+async function renderVideo(htmlPath, outputPath, audioPath, customSize) {
   const { chromium } = require('playwright');
   const FFMPEG = fs.existsSync('/opt/homebrew/bin/ffmpeg') ? '/opt/homebrew/bin/ffmpeg' : 'ffmpeg';
 
@@ -208,9 +231,15 @@ async function renderVideo(htmlPath, outputPath, audioPath) {
     if (total > 0) durationMs = total;
   }
 
-  // Decide orientation
-  let w = 1080, h = 1920;
-  if (/width\s*[:=]\s*['"]?1920/i.test(htmlContent)) { w = 1920; h = 1080; }
+  // Decide size — custom size takes priority
+  let w, h;
+  if (customSize) {
+    w = customSize.w;
+    h = customSize.h;
+  } else {
+    w = 1080; h = 1920;
+    if (/width\s*[:=]\s*['"]?1920/i.test(htmlContent)) { w = 1920; h = 1080; }
+  }
 
   info(`Video: ${w}x${h}, duration: ${(durationMs / 1000).toFixed(1)}s`);
 
@@ -325,7 +354,7 @@ async function cmdGenerate(args) {
   if (!config) { err('Not initialized. Run: framebear init'); process.exit(1); }
 
   // Parse args
-  let prompt = '', company = '', output = '', audio = '', logo = '', templateId = '';
+  let prompt = '', company = '', output = '', audio = '', logo = '', templateId = '', videoIn = '', sizeKey = '';
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--prompt' && args[i + 1]) prompt = args[++i];
     else if (args[i] === '--company' && args[i + 1]) company = args[++i];
@@ -333,6 +362,8 @@ async function cmdGenerate(args) {
     else if (args[i] === '--audio' && args[i + 1]) audio = args[++i];
     else if (args[i] === '--logo' && args[i + 1]) logo = args[++i];
     else if (args[i] === '--template' && args[i + 1]) templateId = args[++i];
+    else if (args[i] === '--video' && args[i + 1]) videoIn = cleanPath(args[++i]);
+    else if (args[i] === '--size' && args[i + 1]) sizeKey = args[++i];
   }
 
   // Interactive
@@ -354,11 +385,40 @@ async function cmdGenerate(args) {
     }
     templateId = keys[tmplIdx];
   }
+
+  // Ask for video input if template supports it
+  const selectedTmpl = TEMPLATES[templateId];
+  if (selectedTmpl && selectedTmpl.supportsVideo && !videoIn) {
+    let vid = await ask('Video file path (MP4):');
+    videoIn = cleanPath(vid);
+  }
+
+  // Ask for size if not provided
+  if (!sizeKey) {
+    console.log();
+    log(`${c.bold}Choose video size:${c.reset}`);
+    console.log();
+    const sizeKeys = Object.keys(SIZE_PRESETS);
+    sizeKeys.forEach((k, i) => {
+      log(`  ${c.purple}${i + 1}${c.reset}) ${c.bold}${k}${c.reset} ${c.dim}— ${SIZE_PRESETS[k].label}${c.reset}`);
+    });
+    console.log();
+    const sizeChoice = await ask(`Select size (1-${sizeKeys.length}, default 1):`);
+    const sizeIdx = parseInt(sizeChoice) - 1;
+    if (!isNaN(sizeIdx) && sizeIdx >= 0 && sizeIdx < sizeKeys.length) {
+      sizeKey = sizeKeys[sizeIdx];
+    } else {
+      sizeKey = '9:16'; // Default
+    }
+  }
+
+  const chosenSize = SIZE_PRESETS[sizeKey] || SIZE_PRESETS['9:16'];
+
   if (!audio) {
     let aud = await ask('Audio path (optional, Enter to skip):');
     audio = cleanPath(aud);
   }
-  if (!logo) {
+  if (!logo && !(selectedTmpl && selectedTmpl.supportsVideo)) {
     let lg = await ask('Logo path (optional, Enter to skip):');
     logo = cleanPath(lg);
   }
@@ -367,6 +427,8 @@ async function cmdGenerate(args) {
   console.log();
   success(`Model: ${c.bold}${config.model}${c.reset}`);
   success(`Template: ${c.bold}${TEMPLATES[templateId].name}${c.reset}`);
+  success(`Size: ${c.bold}${sizeKey} (${chosenSize.w}x${chosenSize.h})${c.reset}`);
+  if (videoIn) success(`Source video: ${c.bold}${path.basename(videoIn)}${c.reset}`);
   console.log();
 
   // Prepare logo
@@ -375,6 +437,33 @@ async function cmdGenerate(args) {
     const ext = path.extname(logo).slice(1) || 'png';
     logoDataUri = `data:image/${ext};base64,${fs.readFileSync(logo).toString('base64')}`;
     success('Logo embedded');
+  }
+
+  // Prepare video — copy alongside HTML for Playwright to access
+  let videoAbsPath = '';
+  if (videoIn && fs.existsSync(videoIn)) {
+    const outputDir = path.dirname(output);
+    fs.mkdirSync(outputDir, { recursive: true });
+    const videoFileName = 'source_video.mp4';
+    const videoDest = path.join(outputDir, videoFileName);
+    fs.copyFileSync(videoIn, videoDest);
+    videoAbsPath = path.resolve(videoDest);
+    success(`Source video copied → ${videoDest}`);
+  }
+
+  // Get video duration from source video if available
+  let srcVideoDurationMs = 28000; // default
+  if (videoAbsPath) {
+    try {
+      const { spawnSync } = require('child_process');
+      const FFPROBE = fs.existsSync('/opt/homebrew/bin/ffprobe') ? '/opt/homebrew/bin/ffprobe' : 'ffprobe';
+      const probe = spawnSync(FFPROBE, ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', videoAbsPath], { stdio: 'pipe' });
+      if (probe.status === 0) {
+        const dur = parseFloat(probe.stdout.toString().trim());
+        if (dur > 0) srcVideoDurationMs = Math.ceil(dur * 1000);
+        info(`Source video duration: ${(srcVideoDurationMs / 1000).toFixed(1)}s`);
+      }
+    } catch (e) { /* fallback to default */ }
   }
 
   // Get AI customizations
@@ -388,7 +477,7 @@ async function cmdGenerate(args) {
     info('Using smart defaults...');
     customizations = {
       BRAND: company,
-      HEADLINE: 'The future starts here.',
+      HEADLINE: prompt || 'Breaking News Update',
       SUBLINE: 'Built for speed. Designed for scale.',
       COMMAND: `${company.toLowerCase()} generate --prompt "launch video"`,
       GRID_TITLE: 'Powered by 12+ AI Models',
@@ -397,15 +486,22 @@ async function cmdGenerate(args) {
       ACCENT_COLOR: '#9b7fd4',
       WORD_1: company.split(' ')[0] || 'Build',
       WORD_2: 'Better.',
+      CITY: 'PUNE',
     };
   }
 
-  info(`Accent: ${customizations.ACCENT_COLOR || '#9b7fd4'}`);
+  // For dcn_news, inject the duration
+  if (templateId === 'dcn_news') {
+    customizations.DURATION_MS = String(srcVideoDurationMs);
+    customizations.STAGE_WIDTH = String(chosenSize.w);
+    customizations.STAGE_HEIGHT = String(chosenSize.h);
+  }
+
   info(`Headline: ${customizations.HEADLINE || customizations.WORD_1 || ''}`);
 
   // Fill template
   info('Building animation from template...');
-  const htmlContent = fillTemplate(templateId, customizations, logoDataUri);
+  const htmlContent = fillTemplate(templateId, customizations, logoDataUri, videoAbsPath);
   const htmlPath = output.replace('.mp4', '.html');
   fs.mkdirSync(path.dirname(htmlPath), { recursive: true });
   fs.writeFileSync(htmlPath, htmlContent);
@@ -414,7 +510,7 @@ async function cmdGenerate(args) {
   // Render
   info('Rendering video with Playwright...');
   try {
-    await renderVideo(htmlPath, output, audio);
+    await renderVideo(htmlPath, output, audio, chosenSize);
     success(`Video saved → ${c.bold}${output}${c.reset}`);
   } catch (e) {
     err(`Rendering failed: ${e.message}`);
@@ -435,6 +531,7 @@ function cmdTemplates() {
     log(`  ${c.purple}•${c.reset} ${c.bold}${t.name}${c.reset} ${c.dim}(${id})${c.reset}`);
     log(`    ${c.dim}${t.desc}${c.reset}`);
     log(`    ${c.dim}Customizable: ${t.placeholders.join(', ')}${c.reset}`);
+    if (t.supportsVideo) log(`    ${c.cyan}📹 Accepts video input${c.reset}`);
     console.log();
   });
 }
@@ -465,10 +562,20 @@ function cmdHelp() {
   console.log();
   log(`  ${c.yellow}--prompt${c.reset}     ${c.dim}"Describe your video"${c.reset}`);
   log(`  ${c.yellow}--company${c.reset}    ${c.dim}"Brand name"${c.reset}`);
-  log(`  ${c.yellow}--template${c.reset}   ${c.dim}product_launch | minimal_text${c.reset}`);
+  log(`  ${c.yellow}--template${c.reset}   ${c.dim}product_launch | minimal_text | dcn_news${c.reset}`);
+  log(`  ${c.yellow}--video${c.reset}      ${c.dim}path/to/source.mp4 (for video templates)${c.reset}`);
+  log(`  ${c.yellow}--size${c.reset}       ${c.dim}9:16 | 16:9 | 1:1 | 4:5 | 4:3${c.reset}`);
   log(`  ${c.yellow}--logo${c.reset}       ${c.dim}path/to/logo.png${c.reset}`);
   log(`  ${c.yellow}--audio${c.reset}      ${c.dim}path/to/song.mp3${c.reset}`);
   log(`  ${c.yellow}--output${c.reset}     ${c.dim}path/to/output.mp4${c.reset}`);
+  console.log();
+  log(`${c.bold}Examples${c.reset}`);
+  console.log();
+  log(`  ${c.dim}# News video with overlay${c.reset}`);
+  log(`  ${c.purple}framebear generate${c.reset} --template dcn_news --video clip.mp4 --size 9:16`);
+  console.log();
+  log(`  ${c.dim}# Product launch promo${c.reset}`);
+  log(`  ${c.purple}framebear generate${c.reset} --template product_launch --company "MyApp"`);
   console.log();
 }
 

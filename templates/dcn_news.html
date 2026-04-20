@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{BRAND}} — {{CITY}}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%; overflow: hidden;
+      background: #0a0a0a; font-family: 'Inter', sans-serif; color: #fff;
+    }
+    body { display: grid; place-items: center; }
+
+    .stage {
+      position: relative;
+      width: {{STAGE_WIDTH}}px;
+      height: {{STAGE_HEIGHT}}px;
+      overflow: hidden;
+      background: #1a0000;
+    }
+
+    /* ══════════════════════════════════════════
+       TOP HEADER — Yellow + Dark Red Diagonal
+       Exact match to DCN reference
+       ══════════════════════════════════════════ */
+    .header-bg {
+      position: absolute; top: 0; left: 0; width: 100%;
+      height: 7%; /* responsive */
+      z-index: 10; overflow: hidden;
+    }
+
+    .header-bg::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, #5a0000 0%, #8B0000 40%, #6a0000 100%);
+    }
+
+    .header-bg::after {
+      content: ''; position: absolute;
+      top: -40%; left: -10%;
+      width: 42%; height: 200%;
+      background: #FFD700;
+      transform: skewX(-25deg);
+    }
+
+    /* ══════════════════════════════════════════
+       VIDEO AREA
+       ══════════════════════════════════════════ */
+    .video-container {
+      position: absolute;
+      top: 6.5%; left: 0; right: 0;
+      height: 46%;
+      overflow: hidden;
+      z-index: 5;
+      background: #111;
+      border-left: 4px solid #8B0000;
+      border-right: 4px solid #8B0000;
+    }
+
+    .video-container video {
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+
+    /* ══════════════════════════════════════════
+       DCN LOGO BADGE — Top Right of Video
+       Pixel-perfect match to reference:
+       Red box with "DCN" big, "DAILY/CITY/NEWS" small,
+       Yellow bar with "PUNE" at bottom
+       ══════════════════════════════════════════ */
+    .dcn-logo {
+      position: absolute;
+      top: 8%; right: 2%;
+      z-index: 20;
+      display: flex; flex-direction: column; align-items: stretch;
+      width: 14%;
+      opacity: 0;
+      animation: logoFadeIn 0.5s ease 0.3s forwards;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.6));
+    }
+
+    .logo-red-box {
+      background: #CC0000;
+      padding: 8% 12% 4%;
+      text-align: center;
+      border-radius: 3px 3px 0 0;
+    }
+
+    .logo-dcn-text {
+      font-family: 'Inter', sans-serif;
+      font-weight: 900;
+      font-size: 3.2vw;
+      color: #fff;
+      letter-spacing: 2px;
+      line-height: 1;
+    }
+
+    .logo-daily-text {
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 0.95vw;
+      color: #fff;
+      letter-spacing: 0.5px;
+      line-height: 1.4;
+      margin-top: 4%;
+    }
+
+    .logo-yellow-bar {
+      background: #FFD700;
+      padding: 4% 12% 6%;
+      text-align: center;
+      border-radius: 0 0 3px 3px;
+    }
+
+    .logo-city-text {
+      font-family: 'Inter', sans-serif;
+      font-weight: 900;
+      font-size: 1.8vw;
+      color: #000;
+      letter-spacing: 3px;
+    }
+
+    @keyframes logoFadeIn { to { opacity: 1; } }
+
+    /* ══════════════════════════════════════════
+       BOTTOM SECTION — Title + Social + Brand
+       ══════════════════════════════════════════ */
+    .bottom-section {
+      position: absolute;
+      top: 52.5%; left: 0; right: 0; bottom: 0;
+      z-index: 10;
+      display: flex; flex-direction: column;
+    }
+
+    /* Dark red title area */
+    .title-area {
+      background: linear-gradient(180deg, #6B0000 0%, #4a0000 100%);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 3% 5% 0;
+    }
+
+    .headline-text {
+      font-family: 'Poppins', 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 3.4vw;
+      color: #fff;
+      text-align: center;
+      line-height: 1.22;
+      letter-spacing: -0.01em;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      opacity: 0; transform: translateY(30px);
+      animation: headlineIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards;
+    }
+
+    @keyframes headlineIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* White separator line */
+    .separator {
+      width: 24%; height: 3px;
+      background: #fff;
+      margin: 3% auto 0;
+      border-radius: 2px;
+      opacity: 0;
+      animation: fadeIn 0.5s ease 1.4s forwards;
+    }
+
+    /* Social icons row */
+    .social-row {
+      background: linear-gradient(180deg, #4a0000 0%, #3a0000 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 5%;
+      padding: 2.5% 0;
+      opacity: 0;
+      animation: fadeIn 0.6s ease 1.6s forwards;
+    }
+
+    .social-icon {
+      width: 5.5%; aspect-ratio: 1;
+      border-radius: 50%;
+      display: grid; place-items: center;
+    }
+
+    .social-icon.fb { background: #1877F2; }
+    .social-icon.ig {
+      background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
+    }
+    .social-icon.verified { background: #1DA1F2; }
+
+    .social-icon svg {
+      width: 55%; height: 55%; fill: #fff;
+    }
+
+    /* White brand footer */
+    .brand-bar {
+      background: #fff;
+      padding: 1.5% 0;
+      text-align: center;
+    }
+
+    .brand-bar-text {
+      font-family: 'Inter', sans-serif;
+      font-weight: 800;
+      font-size: 2vw;
+      color: #000;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+    }
+
+    @keyframes fadeIn { to { opacity: 1; } }
+  </style>
+</head>
+<body>
+  <main class="stage">
+
+    <!-- Top Header -->
+    <div class="header-bg"></div>
+
+    <!-- Video Content -->
+    <div class="video-container">
+      <video id="bgVideo" muted playsinline autoplay>
+        <source src="__VIDEO_SRC__" type="video/mp4">
+      </video>
+    </div>
+
+    <!-- DCN Logo Badge — exact reference match -->
+    <div class="dcn-logo">
+      <div class="logo-red-box">
+        <div class="logo-dcn-text">DCN</div>
+        <div class="logo-daily-text">DAILY<br>CITY<br>NEWS</div>
+      </div>
+      <div class="logo-yellow-bar">
+        <span class="logo-city-text">{{CITY}}</span>
+      </div>
+    </div>
+
+    <!-- Bottom Section -->
+    <div class="bottom-section">
+      <div class="title-area">
+        <h1 class="headline-text">{{HEADLINE}}</h1>
+        <div class="separator"></div>
+      </div>
+
+      <div class="social-row">
+        <!-- Facebook -->
+        <div class="social-icon fb">
+          <svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        </div>
+        <!-- Instagram -->
+        <div class="social-icon ig">
+          <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+        </div>
+        <!-- Verified -->
+        <div class="social-icon verified">
+          <svg viewBox="0 0 24 24"><path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.998-3.818-3.998-.47 0-.92.084-1.336.25C14.818 2.415 13.51 1.5 12 1.5s-2.816.917-3.437 2.25c-.415-.165-.866-.25-1.336-.25-2.11 0-3.818 1.79-3.818 4 0 .494.083.964.237 1.4-1.272.65-2.147 2.018-2.147 3.6 0 1.495.782 2.798 1.942 3.486-.02.17-.032.34-.032.514 0 2.21 1.708 4 3.818 4 .47 0 .92-.086 1.335-.25.62 1.334 1.926 2.25 3.437 2.25 1.512 0 2.818-.916 3.437-2.25.415.163.865.248 1.336.248 2.11 0 3.818-1.79 3.818-4 0-.174-.012-.344-.033-.513 1.158-.687 1.943-1.99 1.943-3.484zm-6.616-3.334l-4.334 6.5c-.145.217-.382.334-.625.334-.143 0-.288-.04-.416-.126l-.115-.094-2.415-2.415c-.293-.293-.293-.768 0-1.06s.768-.294 1.06 0l1.77 1.767 3.825-5.74c.23-.345.696-.436 1.04-.207.346.23.44.696.21 1.04z"/></svg>
+        </div>
+      </div>
+
+      <div class="brand-bar">
+        <div class="brand-bar-text">{{BRAND}}</div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    window.__animationDurationMs = {{DURATION_MS}};
+
+    const video = document.getElementById('bgVideo');
+
+    video.addEventListener('loadeddata', () => {
+      video.play().catch(() => {});
+    });
+
+    // Try autoplay immediately too
+    video.play().catch(() => {});
+
+    // Hide video element if source not injected
+    if (video.querySelector('source').src.includes('__VIDEO_SRC__')) {
+      video.style.display = 'none';
+    }
+  </script>
+</body>
+</html>
